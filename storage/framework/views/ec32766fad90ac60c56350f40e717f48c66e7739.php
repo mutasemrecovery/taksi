@@ -1,0 +1,115 @@
+<?php $__env->startSection('title', __('messages.Coupons')); ?>
+
+<?php $__env->startSection('content'); ?>
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800"><?php echo e(__('messages.Coupons')); ?></h1>
+        <a href="<?php echo e(route('coupons.create')); ?>" class="btn btn-primary">
+            <i class="fas fa-plus"></i> <?php echo e(__('messages.Add_New_Coupon')); ?>
+
+        </a>
+    </div>
+
+    <?php if(session('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <?php echo e(session('success')); ?>
+
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <?php endif; ?>
+
+    <!-- Coupons Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary"><?php echo e(__('messages.Coupons_List')); ?></h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th><?php echo e(__('messages.ID')); ?></th>
+                            <th><?php echo e(__('messages.Code')); ?></th>
+                            <th><?php echo e(__('messages.Title')); ?></th>
+                            <th><?php echo e(__('messages.Discount')); ?></th>
+                            <th><?php echo e(__('messages.Validity')); ?></th>
+                            <th><?php echo e(__('messages.Coupon_Type')); ?></th>
+                            <th><?php echo e(__('messages.Status')); ?></th>
+                            <th><?php echo e(__('messages.Actions')); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php $__currentLoopData = $coupons; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $coupon): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <tr>
+                            <td><?php echo e($coupon->id); ?></td>
+                            <td>
+                                <span class="font-weight-bold"><?php echo e($coupon->code); ?></span>
+                            </td>
+                            <td><?php echo e($coupon->title); ?></td>
+                            <td>
+                                <?php echo e($coupon->getFormattedDiscount()); ?>
+
+                                <span class="badge badge-info"><?php echo e($coupon->getDiscountTypeText()); ?></span>
+                            </td>
+                            <td>
+                                <small><?php echo e(__('messages.Start')); ?>: <?php echo e($coupon->start_date->format('Y-m-d')); ?></small><br>
+                                <small><?php echo e(__('messages.End')); ?>: <?php echo e($coupon->end_date->format('Y-m-d')); ?></small>
+                            </td>
+                            <td>
+                                <span class="badge badge-primary"><?php echo e($coupon->getCouponTypeText()); ?></span>
+                                <?php if($coupon->coupon_type == 3 && $coupon->service): ?>
+                                <small class="d-block text-muted mt-1"><?php echo e($coupon->service->name_en); ?></small>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <span class="badge badge-<?php echo e($coupon->getStatusClass()); ?>"><?php echo e($coupon->getStatus()); ?></span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="<?php echo e(route('coupons.show', $coupon->id)); ?>" class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="<?php echo e(route('coupons.edit', $coupon->id)); ?>" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-warning btn-sm" onclick="event.preventDefault(); document.getElementById('toggle-form-<?php echo e($coupon->id); ?>').submit();">
+                                        <?php if($coupon->activate == 1): ?>
+                                        <i class="fas fa-ban"></i>
+                                        <?php else: ?>
+                                        <i class="fas fa-check"></i>
+                                        <?php endif; ?>
+                                    </a>
+                                    <form id="toggle-form-<?php echo e($coupon->id); ?>" action="<?php echo e(route('coupons.toggleActivation', $coupon->id)); ?>" method="POST" style="display: none;">
+                                        <?php echo csrf_field(); ?>
+                                        <?php echo method_field('GET'); ?>
+                                    </form>
+                                    <a href="#" class="btn btn-danger btn-sm" onclick="event.preventDefault(); if(confirm('<?php echo e(__('messages.Delete_Confirm')); ?>')) document.getElementById('delete-form-<?php echo e($coupon->id); ?>').submit();">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    <form id="delete-form-<?php echo e($coupon->id); ?>" action="<?php echo e(route('coupons.destroy', $coupon->id)); ?>" method="POST" style="display: none;">
+                                        <?php echo csrf_field(); ?>
+                                        <?php echo method_field('DELETE'); ?>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection('script'); ?>
+<script>
+    $(document).ready(function() {
+        $('#dataTable').DataTable();
+    });
+</script>
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.admin', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\uber\resources\views/admin/coupons/index.blade.php ENDPATH**/ ?>
