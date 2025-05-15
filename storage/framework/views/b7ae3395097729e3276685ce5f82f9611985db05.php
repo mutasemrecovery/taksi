@@ -99,7 +99,7 @@
 </div>
 <?php $__env->stopSection(); ?>
 
-<?php $__env->startSection('scripts'); ?>
+<?php $__env->startSection('script'); ?>
 <script>
     $(document).ready(function() {
         $('#dataTable').DataTable();

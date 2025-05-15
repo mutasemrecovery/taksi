@@ -95,6 +95,7 @@ class AuthController extends Controller
                 'user_exists' => true,
                 'account_status' => 'active',
                 'user_type' => $userType,
+                'user' => $user,
                 'token' => $accessToken,
             ], 200);
         }

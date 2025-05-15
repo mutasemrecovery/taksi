@@ -62,24 +62,8 @@
                                     <a href="<?php echo e(route('users.edit', $user->id)); ?>" class="btn btn-primary btn-sm">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="#" class="btn btn-warning btn-sm" onclick="event.preventDefault(); document.getElementById('toggle-form-<?php echo e($user->id); ?>').submit();">
-                                        <?php if($user->activate == 1): ?>
-                                        <i class="fas fa-ban"></i>
-                                        <?php else: ?>
-                                        <i class="fas fa-check"></i>
-                                        <?php endif; ?>
-                                    </a>
-                                    <form id="toggle-form-<?php echo e($user->id); ?>" action="<?php echo e(route('users.toggleActivation', $user->id)); ?>" method="POST" style="display: none;">
-                                        <?php echo csrf_field(); ?>
-                                        <?php echo method_field('GET'); ?>
-                                    </form>
-                                    <a href="#" class="btn btn-danger btn-sm" onclick="event.preventDefault(); if(confirm('<?php echo e(__('messages.Delete_Confirm')); ?>')) document.getElementById('delete-form-<?php echo e($user->id); ?>').submit();">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                    <form id="delete-form-<?php echo e($user->id); ?>" action="<?php echo e(route('users.destroy', $user->id)); ?>" method="POST" style="display: none;">
-                                        <?php echo csrf_field(); ?>
-                                        <?php echo method_field('DELETE'); ?>
-                                    </form>
+                                 
+                                   
                                 </div>
                             </td>
                         </tr>

@@ -63,24 +63,8 @@
                                     <a href="{{ route('users.edit', $user->id) }}" class="btn btn-primary btn-sm">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="#" class="btn btn-warning btn-sm" onclick="event.preventDefault(); document.getElementById('toggle-form-{{ $user->id }}').submit();">
-                                        @if($user->activate == 1)
-                                        <i class="fas fa-ban"></i>
-                                        @else
-                                        <i class="fas fa-check"></i>
-                                        @endif
-                                    </a>
-                                    <form id="toggle-form-{{ $user->id }}" action="{{ route('users.toggleActivation', $user->id) }}" method="POST" style="display: none;">
-                                        @csrf
-                                        @method('GET')
-                                    </form>
-                                    <a href="#" class="btn btn-danger btn-sm" onclick="event.preventDefault(); if(confirm('{{ __('messages.Delete_Confirm') }}')) document.getElementById('delete-form-{{ $user->id }}').submit();">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                    <form id="delete-form-{{ $user->id }}" action="{{ route('users.destroy', $user->id) }}" method="POST" style="display: none;">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
+                                 
+                                   
                                 </div>
                             </td>
                         </tr>

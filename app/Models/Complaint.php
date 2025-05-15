@@ -10,6 +10,12 @@ class Complaint extends Model
     use HasFactory;
     
     protected $guarded = [];
+
+    const STATUS_PENDING = 1;
+    const STATUS_IN_PROGRESS = 2;
+    const STATUS_DONE = 3;
+
+    
     public function getStatusLabelAttribute()
     {
         switch ($this->status) {
