@@ -45,7 +45,7 @@
                                 @endif
                             </td>
                             <td>{{ $driver->name }}</td>
-                            <td>{{ $driver->phone }}</td>
+                            <td>{{ $user->country_code }} {{ $user->phone }}</td>
                             <td>
                                 {{ $driver->model ?? 'N/A' }}
                                 @if($driver->color)

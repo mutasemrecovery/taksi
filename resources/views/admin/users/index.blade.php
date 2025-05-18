@@ -45,7 +45,7 @@
                                 @endif
                             </td>
                             <td>{{ $user->name }}</td>
-                            <td>{{ $user->phone }}</td>
+                            <td>{{ $user->country_code }} {{ $user->phone }}</td>
                             <td>{{ $user->email }}</td>
                             <td>{{ $user->balance }}</td>
                             <td>
