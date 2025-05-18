@@ -47,6 +47,32 @@ class AuthController extends Controller
             return $this->error_response('Failed to deactivate account', ['error' => $e->getMessage()]);
         }
     }
+       public function logout()
+    {
+        try {
+            // Check if the request is authenticated with user-api guard
+            $userApi = auth('user-api')->user();
+            
+            // Check if the request is authenticated with driver-api guard
+            $driverApi = auth('driver-api')->user();
+            
+            if ($userApi) {
+                // Revoke all tokens for user
+                $userApi->tokens()->delete();
+                return $this->success_response('User logout successful', []);
+            } elseif ($driverApi) {
+                // Revoke all tokens for driver
+                $driverApi->tokens()->delete();
+                return $this->success_response('Driver logout successful', []);
+            } else {
+                return $this->error_response('Unauthenticated', [], 401);
+            }
+        } catch (\Throwable $th) {
+            // Log the error for debugging
+            \Log::error('Logout error: ' . $th->getMessage());
+            return $this->error_response('Failed to logout', []);
+        }
+    }
 
     public function checkPhone(Request $request)
     {

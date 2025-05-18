@@ -56,6 +56,7 @@ Route::group(['prefix' => 'v1/user'], function () {
         Route::post('/uploadPhotoVoice', [UploadPhotoVoiceController::class, 'store']);
 
         Route::post('/update_profile', [AuthController::class, 'updateProfile']);
+        Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/delete_account', [AuthController::class, 'deleteAccount']);
         Route::get('/userProfile', [AuthController::class, 'userProfile']);
         Route::get('/pages/{type}', [PageController::class, 'index']);
@@ -111,6 +112,7 @@ Route::group(['prefix' => 'v1/driver'], function () {
         // image for chat
         Route::get('/uploadPhotoVoice', [UploadPhotoVoiceController::class, 'index']);
         Route::post('/uploadPhotoVoice', [UploadPhotoVoiceController::class, 'store']);
+        Route::post('/logout', [AuthController::class, 'logout']);
 
         //Notification
         Route::get('/notifications', [AuthController::class, 'notifications']);
