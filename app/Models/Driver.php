@@ -21,6 +21,21 @@ class Driver extends Authenticatable
       'remember_token',
    ];
 
+      // Append the photo_url attribute to JSON responses
+    protected $appends = ['photo_url'];
+    
+    // Add a custom accessor for the photo URL
+    public function getPhotoUrlAttribute()
+    {
+        if ($this->photo) {
+            // Use the APP_URL from the .env file
+            $baseUrl = rtrim(config('app.url'), '/');
+            return $baseUrl . '/assets/admin/uploads/' . $this->photo;
+        }
+        
+        return null;
+    }
+    
  public function option()
    {
       return $this->belongsTo(Option::class);
