@@ -7,12 +7,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Complaint;
 use App\Models\Order;
 use App\Models\Setting;
+use App\Traits\Responses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class ComplaintController extends Controller
 {
+    use Responses;
+
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -25,11 +28,7 @@ class ComplaintController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
 
         $query = Complaint::where('user_id', $user->id);
@@ -59,17 +58,17 @@ class ComplaintController extends Controller
             return $complaint;
         });
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Complaints retrieved successfully',
-            'data' => $complaints,
+        $responseData = [
+            'complaints' => $complaints,
             'meta' => [
                 'current_page' => $complaints->currentPage(),
                 'last_page' => $complaints->lastPage(),
                 'per_page' => $complaints->perPage(),
                 'total' => $complaints->total()
             ]
-        ]);
+        ];
+
+        return $this->success_response('Complaints retrieved successfully', $responseData);
     }
 
     /**
@@ -90,11 +89,7 @@ class ComplaintController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
 
         // If order_id is provided, verify it belongs to the user
@@ -102,10 +97,7 @@ class ComplaintController extends Controller
             $order = Order::find($request->order_id);
 
             if (!$order || $order->user_id != $user->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Order not found or does not belong to you'
-                ], 404);
+                return $this->error_response('Order not found or does not belong to you', null);
             }
 
             // If driver_id is not provided, get it from the order
@@ -126,11 +118,7 @@ class ComplaintController extends Controller
         // Add status name to response
         $complaint->status_name = $complaint->getStatusNameAttribute();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Complaint submitted successfully',
-            'data' => $complaint
-        ], 201);
+        return $this->success_response('Complaint submitted successfully', $complaint);
     }
 
     /**
@@ -148,21 +136,14 @@ class ComplaintController extends Controller
             ->first();
 
         if (!$complaint) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Complaint not found'
-            ], 404);
+            return $this->error_response('Complaint not found', null);
         }
 
         // Add status name and load relationships
         $complaint->status_name = $complaint->getStatusNameAttribute();
         $complaint->load(['driver:id,name,phone,photo', 'order:id,order_number,created_at,total']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Complaint details retrieved successfully',
-            'data' => $complaint
-        ]);
+        return $this->success_response('Complaint details retrieved successfully', $complaint);
     }
 
     /**
@@ -181,18 +162,12 @@ class ComplaintController extends Controller
             ->first();
 
         if (!$complaint) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Complaint not found'
-            ], 404);
+            return $this->error_response('Complaint not found', null);
         }
 
         // Only allow updates if the complaint is still pending
         if ($complaint->status != Complaint::STATUS_PENDING) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot update complaint that is already being processed'
-            ], 400);
+            return $this->error_response('Cannot update complaint that is already being processed', null);
         }
 
         $validator = Validator::make($request->all(), [
@@ -201,11 +176,7 @@ class ComplaintController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
 
         if ($request->has('subject')) {
@@ -221,11 +192,7 @@ class ComplaintController extends Controller
         // Add status name to response
         $complaint->status_name = $complaint->getStatusNameAttribute();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Complaint updated successfully',
-            'data' => $complaint
-        ]);
+        return $this->success_response('Complaint updated successfully', $complaint);
     }
 
     /**
@@ -243,25 +210,16 @@ class ComplaintController extends Controller
             ->first();
 
         if (!$complaint) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Complaint not found'
-            ], 404);
+            return $this->error_response('Complaint not found', null);
         }
 
         // Only allow deletion if the complaint is still pending
         if ($complaint->status != Complaint::STATUS_PENDING) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot delete complaint that is already being processed'
-            ], 400);
+            return $this->error_response('Cannot delete complaint that is already being processed', null);
         }
 
         $complaint->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Complaint deleted successfully'
-        ]);
+        return $this->success_response('Complaint deleted successfully', null);
     }
 }

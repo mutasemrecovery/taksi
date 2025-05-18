@@ -19,7 +19,7 @@ class RatingDriverController extends Controller
         $driver_id = auth()->guard('driver-api')->user()->id;
         $data = Rating::where('driver_id',$driver_id)->get();
 
-        return response()->json(['data' => $data]);
+       return $this->success_response('Rating get successfully', $data);
     }
 
 

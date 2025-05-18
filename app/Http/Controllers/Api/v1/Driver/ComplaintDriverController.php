@@ -6,12 +6,15 @@ namespace App\Http\Controllers\Api\v1\Driver;
 use App\Http\Controllers\Controller;
 use App\Models\Complaint;
 use App\Models\Order;
+use App\Traits\Responses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class ComplaintDriverController extends Controller
 {
+    use Responses;
+
     public function index(Request $request)
     {
         $driver = Auth::guard('driver-api')->user();
@@ -25,11 +28,7 @@ class ComplaintDriverController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
         
         $type = $request->type ?? 'all';
@@ -72,19 +71,16 @@ class ComplaintDriverController extends Controller
             return $complaint;
         });
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Complaints retrieved successfully',
-            'data' => $complaints,
+        $responseData = [
+            'complaints' => $complaints,
             'meta' => [
                 'current_page' => $complaints->currentPage(),
                 'last_page' => $complaints->lastPage(),
                 'per_page' => $complaints->perPage(),
                 'total' => $complaints->total()
             ]
-        ]);
+        ];
+        
+        return $this->success_response('Complaints retrieved successfully', $responseData);
     }
-    
-
-
 }

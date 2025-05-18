@@ -6,15 +6,18 @@ namespace App\Http\Controllers\Api\v1\User;
 use App\Http\Controllers\Controller;
 use App\Models\Service;
 use App\Models\Setting;
+use App\Traits\Responses;
 use Illuminate\Http\Request;
 
 class ServicesController extends Controller
-{
+{ 
+    use Responses;
+    
      public function index()
     {
         $data = Service::get();
 
-        return response()->json(['data' => $data]);
+          return $this->success_response('Service retrieved successfully', $data);
     }
 
 

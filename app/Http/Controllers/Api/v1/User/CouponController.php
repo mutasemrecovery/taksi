@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Service;
+use App\Traits\Responses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
+
 class CouponController extends Controller
 {
+    use Responses;
+
     /**
      * List available coupons for the user
      *
@@ -49,11 +53,7 @@ class CouponController extends Controller
             return $coupon;
         });
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Available coupons retrieved successfully',
-            'data' => $coupons
-        ]);
+        return $this->success_response('Available coupons retrieved successfully', $coupons);
     }
 
     /**
@@ -73,11 +73,7 @@ class CouponController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
 
         // Get the coupon
@@ -90,18 +86,12 @@ class CouponController extends Controller
             ->first();
 
         if (!$coupon) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid or expired coupon code'
-            ], 400);
+            return $this->error_response('Invalid or expired coupon code', null);
         }
 
         // Check for service-specific coupon
         if ($coupon->coupon_type == 3 && $coupon->service_id != $request->service_id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This coupon is only valid for ' . $coupon->service->name . ' service'
-            ], 400);
+            return $this->error_response('This coupon is only valid for ' . $coupon->service->name . ' service', null);
         }
 
         // Check for first ride coupon
@@ -111,42 +101,39 @@ class CouponController extends Controller
                 ->exists();
 
             if ($hasCompletedRides) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This coupon is only valid for your first ride'
-                ], 400);
+                return $this->error_response('This coupon is only valid for your first ride', null);
             }
         }
 
         // Check minimum amount
         if ($request->amount < $coupon->minimum_amount) {
-            return response()->json([
-                'success' => false,
-                'message' => 'The order amount does not meet the minimum requirement of $' . number_format($coupon->minimum_amount, 2) . ' for this coupon'
-            ], 400);
+            return $this->error_response(
+                'The order amount does not meet the minimum requirement of $' . 
+                number_format($coupon->minimum_amount, 2) . 
+                ' for this coupon', 
+                null
+            );
         }
 
         // Calculate discount
         $discountAmount = $coupon->calculateDiscount($request->amount);
         $finalAmount = $request->amount - $discountAmount;
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Coupon applied successfully',
-            'data' => [
-                'coupon' => [
-                    'id' => $coupon->id,
-                    'code' => $coupon->code,
-                    'title' => $coupon->title,
-                    'discount_type' => $coupon->discount_type,
-                    'discount_type_text' => $coupon->getDiscountTypeText(),
-                    'discount' => $coupon->discount,
-                    'formatted_discount' => $coupon->getFormattedDiscount()
-                ],
-                'original_amount' => (float) $request->amount,
-                'discount_amount' => (float) $discountAmount,
-                'final_amount' => (float) $finalAmount
-            ]
-        ]);
+        $responseData = [
+            'coupon' => [
+                'id' => $coupon->id,
+                'code' => $coupon->code,
+                'title' => $coupon->title,
+                'discount_type' => $coupon->discount_type,
+                'discount_type_text' => $coupon->getDiscountTypeText(),
+                'discount' => $coupon->discount,
+                'formatted_discount' => $coupon->getFormattedDiscount()
+            ],
+            'original_amount' => (float) $request->amount,
+            'discount_amount' => (float) $discountAmount,
+            'final_amount' => (float) $finalAmount
+        ];
+
+        return $this->success_response('Coupon applied successfully', $responseData);
     }
 }

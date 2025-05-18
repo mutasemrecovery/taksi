@@ -4,12 +4,17 @@ namespace App\Http\Controllers\Api\v1\Driver;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Driver;
+use App\Traits\Responses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
+
+
 class OrderDriverController extends Controller
 {
+    use Responses;
+
     /**
      * Display a listing of the driver's orders
      *
@@ -32,11 +37,7 @@ class OrderDriverController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
         
         $query = Order::where('driver_id', $driver->id);
@@ -90,17 +91,17 @@ class OrderDriverController extends Controller
             return $order;
         });
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Orders retrieved successfully',
-            'data' => $orders,
+        $responseData = [
+            'orders' => $orders,
             'meta' => [
                 'current_page' => $orders->currentPage(),
                 'last_page' => $orders->lastPage(),
                 'per_page' => $orders->perPage(),
                 'total' => $orders->total()
             ]
-        ]);
+        ];
+        
+        return $this->success_response('Orders retrieved successfully', $responseData);
     }
     
     /**
@@ -126,11 +127,7 @@ class OrderDriverController extends Controller
             return $order;
         });
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Active orders retrieved successfully',
-            'data' => $orders
-        ]);
+        return $this->success_response('Active orders retrieved successfully', $orders);
     }
     
     /**
@@ -150,11 +147,7 @@ class OrderDriverController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
         
         $query = Order::where('driver_id', $driver->id)
@@ -184,17 +177,17 @@ class OrderDriverController extends Controller
             return $order;
         });
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Completed orders retrieved successfully',
-            'data' => $orders,
+        $responseData = [
+            'orders' => $orders,
             'meta' => [
                 'current_page' => $orders->currentPage(),
                 'last_page' => $orders->lastPage(),
                 'per_page' => $orders->perPage(),
                 'total' => $orders->total()
             ]
-        ]);
+        ];
+        
+        return $this->success_response('Completed orders retrieved successfully', $responseData);
     }
     
     /**
@@ -213,11 +206,7 @@ class OrderDriverController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
         
         $query = Order::where('driver_id', $driver->id);
@@ -246,20 +235,18 @@ class OrderDriverController extends Controller
             return $order;
         });
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Cancelled orders retrieved successfully',
-            'data' => $orders,
+        $responseData = [
+            'orders' => $orders,
             'meta' => [
                 'current_page' => $orders->currentPage(),
                 'last_page' => $orders->lastPage(),
                 'per_page' => $orders->perPage(),
                 'total' => $orders->total()
             ]
-        ]);
+        ];
+        
+        return $this->success_response('Cancelled orders retrieved successfully', $responseData);
     }
-    
-   
     
     /**
      * Display the specified order details
@@ -280,10 +267,7 @@ class OrderDriverController extends Controller
             ->first();
         
         if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found'
-            ], 404);
+            return $this->error_response('Order not found', null);
         }
         
         // Add helper attributes
@@ -293,11 +277,7 @@ class OrderDriverController extends Controller
         $order->distance = $order->getDistance();
         $order->discount_percentage = $order->getDiscountPercentage();
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Order details retrieved successfully',
-            'data' => $order
-        ]);
+        return $this->success_response('Order details retrieved successfully', $order);
     }
     
     /**
@@ -316,18 +296,12 @@ class OrderDriverController extends Controller
             ->first();
         
         if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found'
-            ], 404);
+            return $this->error_response('Order not found', null);
         }
         
         // Check if order can be cancelled
         if (!in_array($order->status, [2, 3])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order cannot be cancelled at this stage'
-            ], 400);
+            return $this->error_response('Order cannot be cancelled at this stage', null);
         }
         
         $validator = Validator::make($request->all(), [
@@ -335,11 +309,7 @@ class OrderDriverController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
         
         // Process cancellation
@@ -350,16 +320,14 @@ class OrderDriverController extends Controller
         // Notify the user about cancellation
         // This is a placeholder - implement your notification logic
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Order cancelled successfully',
-            'data' => [
-                'order_id' => $order->id,
-                'status' => $order->status,
-                'status_text' => $order->getStatusText(),
-                'cancellation_reason' => $order->reason_for_cancel
-            ]
-        ]);
+        $responseData = [
+            'order_id' => $order->id,
+            'status' => $order->status,
+            'status_text' => $order->getStatusText(),
+            'cancellation_reason' => $order->reason_for_cancel
+        ];
+        
+        return $this->success_response('Order cancelled successfully', $responseData);
     }
     
     /**
@@ -378,10 +346,7 @@ class OrderDriverController extends Controller
             ->first();
         
         if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found'
-            ], 404);
+            return $this->error_response('Order not found', null);
         }
         
         $validator = Validator::make($request->all(), [
@@ -389,11 +354,7 @@ class OrderDriverController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
         
         $newStatus = $request->status;
@@ -407,10 +368,7 @@ class OrderDriverController extends Controller
         ];
         
         if (!isset($validTransitions[$currentStatus]) || !in_array($newStatus, $validTransitions[$currentStatus])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid status transition'
-            ], 400);
+            return $this->error_response('Invalid status transition', null);
         }
         
         // Update status
@@ -430,17 +388,14 @@ class OrderDriverController extends Controller
         $order->status_text = $order->getStatusText();
         $order->payment_status_text = $order->getPaymentStatusText();
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Order status updated successfully',
-            'data' => [
-                'order_id' => $order->id,
-                'status' => $order->status,
-                'status_text' => $order->getStatusText(),
-                'payment_status' => $order->status_payment,
-                'payment_status_text' => $order->getPaymentStatusText()
-            ]
-        ]);
+        $responseData = [
+            'order_id' => $order->id,
+            'status' => $order->status,
+            'status_text' => $order->getStatusText(),
+            'payment_status' => $order->status_payment,
+            'payment_status_text' => $order->getPaymentStatusText()
+        ];
+        
+        return $this->success_response('Order status updated successfully', $responseData);
     }
-    
 }

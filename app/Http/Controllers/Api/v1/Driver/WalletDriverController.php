@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Api\v1\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\WalletTransaction;
+use App\Traits\Responses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
+
+
 class WalletDriverController extends Controller
 {
+    use Responses;
   
     public function getTransactions(Request $request)
     {
@@ -23,11 +27,7 @@ class WalletDriverController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
         
         $query = WalletTransaction::where('driver_id', $driver->id);
@@ -51,20 +51,17 @@ class WalletDriverController extends Controller
         $perPage = $request->per_page ?? 15;
         $transactions = $query->paginate($perPage);
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Driver wallet transactions retrieved successfully',
-            'data' => [
-                'balance' => $driver->balance,
-                'transactions' => $transactions
-            ],
+        $responseData = [
+            'balance' => $driver->balance,
+            'transactions' => $transactions,
             'meta' => [
                 'current_page' => $transactions->currentPage(),
                 'last_page' => $transactions->lastPage(),
                 'per_page' => $transactions->perPage(),
                 'total' => $transactions->total()
             ]
-        ]);
+        ];
+        
+        return $this->success_response('Driver wallet transactions retrieved successfully', $responseData);
     }
-
 }

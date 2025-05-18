@@ -11,20 +11,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Admin\FCMController; // <-- Import the FCMController here
 use App\Models\ParentStudent;
+use App\Traits\Responses;
 use Auth;
 use Illuminate\Support\Facades\Validator;
 
+
 class AuthController extends Controller
 {
+    use Responses;
 
     public function active()
     {
         $user = auth()->user();
         if ($user->activate == 2) {
-            return response(['errors' => ['Your account has been InActive']], 403);
+            return $this->error_response('Your account has been InActive', null);
         }
 
-        return response()->json(['user' => $user]);
+        return $this->success_response('User retrieved successfully', $user);
     }
 
     public function deleteAccount(Request $request)
@@ -32,21 +35,20 @@ class AuthController extends Controller
         $user = auth()->user(); // Get the authenticated user
 
         if (!$user) {
-            return response()->json(['message' => 'User not authenticated'], 401);
+            return $this->error_response('User not authenticated', null);
         }
 
         try {
             // Update the `activate` column to 2
             $user->update(['activate' => 2]);
 
-            return response()->json(['message' => 'Account Deleted successfully'], 200);
+            return $this->success_response('Account Deleted successfully', null);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Failed to deactivate account', 'error' => $e->getMessage()], 500);
+            return $this->error_response('Failed to deactivate account', ['error' => $e->getMessage()]);
         }
     }
 
-    
-  public function checkPhone(Request $request)
+    public function checkPhone(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'phone' => 'required|string',
@@ -55,11 +57,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
 
         $phone = $request->phone;
@@ -69,16 +67,13 @@ class AuthController extends Controller
         $model = ($userType == 'driver') ? 'App\Models\Driver' : 'App\Models\User';
         $user = $model::where('phone', $phone)->first();
 
-
         if ($user) {
             // Check if user is active
             if ($user->activate == 2) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Account is inactive',
+                return $this->error_response('Account is inactive', [
                     'user_exists' => true,
                     'account_status' => 'inactive'
-                ], 403);
+                ]);
             }
 
             // Update FCM token if provided
@@ -87,31 +82,26 @@ class AuthController extends Controller
                 $user->save();
             }
 
-                // Create access token
-        $accessToken = $user->createToken('authToken')->accessToken;
-            return response()->json([
-                'status' => true,
-                'message' => 'Success',
+            // Create access token
+            $accessToken = $user->createToken('authToken')->accessToken;
+            
+            return $this->success_response('Success', [
                 'user_exists' => true,
                 'account_status' => 'active',
                 'user_type' => $userType,
                 'user' => $user,
                 'token' => $accessToken,
-            ], 200);
+            ]);
         }
 
-        // User doesn't exist, 
-        return response()->json([
-            'status' => true, 
-            'message' => 'Phone number not registered. OTP sent for registration',
+        // User doesn't exist
+        return $this->success_response('Phone number not registered. OTP sent for registration', [
             'user_exists' => false,
             'user_type' => $userType,
-        ], 200);
+        ]);
     }
 
-
-
-     public function register(Request $request)
+    public function register(Request $request)
     {
         $userType = $request->user_type ?? 'user';
         
@@ -138,11 +128,7 @@ class AuthController extends Controller
         }
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
 
         // Create user with the data
@@ -174,13 +160,11 @@ class AuthController extends Controller
         // Generate access token
         $accessToken = $user->createToken('authToken')->accessToken;
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Registration successful',
+        return $this->success_response('Registration successful', [
             'token' => $accessToken,
             'user' => $user,
             'new_user' => true
-        ], 200);
+        ]);
     }
 
     public function userProfile()
@@ -189,13 +173,8 @@ class AuthController extends Controller
         $user = auth()->user();
 
         // Return the user's profile
-        return response([
-            'user' => $user,
-        ], 200);
+        return $this->success_response('User profile retrieved', $user);
     }
-
-
-
 
     public function updateProfile(Request $request)
     {
@@ -203,15 +182,20 @@ class AuthController extends Controller
         $user = auth()->user();
 
         // Validate input data
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . $user->id, // Ensure email is unique
             'phone' => 'nullable|string',
             'photo' => 'nullable|image|max:2048', // Optional photo upload
         ]);
 
-        // Handle file upload for photo (if provided)
+        if ($validator->fails()) {
+            return $this->error_response('Validation error', $validator->errors());
+        }
 
+        $data = $request->only(['name', 'email', 'phone']);
+
+        // Handle file upload for photo (if provided)
         if ($request->has('photo')) {
             $data['photo'] = uploadImage('assets/admin/uploads', $request->photo);
         }
@@ -220,15 +204,10 @@ class AuthController extends Controller
         $user->update($data);
 
         // Return updated user data
-        return response([
-            'message' => 'Profile updated successfully',
-            'user' => $user,
-        ], 200);
+        return $this->success_response('Profile updated successfully', $user);
     }
 
-
-
-     public function notifications()
+    public function notifications()
     {
         $user = auth()->user();
 
@@ -256,19 +235,20 @@ class AuthController extends Controller
             ->orderBy('id', 'DESC')
             ->get();
 
-        return response(['data' => $notifications], 200);
+        return $this->success_response('Notifications retrieved successfully', $notifications);
     }
-
-
-
 
     public function sendToUser(Request $request)
     {
-        $this->validate($request, [
+        $validator = Validator::make($request->all(), [
             'user_id' => 'required',
             'title' => 'required|string',
             'body' => 'required|string'
         ]);
+
+        if ($validator->fails()) {
+            return $this->error_response('Validation error', $validator->errors());
+        }
 
         try {
             // Call the sendMessageToUser method in the FCMController
@@ -279,7 +259,6 @@ class AuthController extends Controller
             );
 
             if ($response) {
-
                 return redirect()->back()->with('message', 'Notification sent successfully to the user');
             } else {
                 return redirect()->back()->with('error', 'Notification was not sent to the user');

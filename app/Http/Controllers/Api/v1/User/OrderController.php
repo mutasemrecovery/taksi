@@ -5,12 +5,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Service;
 use App\Models\User;
+use App\Traits\Responses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
+    use Responses;
+
     /**
      * Display a listing of the user's orders
      *
@@ -33,11 +36,7 @@ class OrderController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
         
         $query = Order::where('user_id', $user->id);
@@ -91,17 +90,17 @@ class OrderController extends Controller
             return $order;
         });
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Orders retrieved successfully',
-            'data' => $orders,
+        $responseData = [
+            'orders' => $orders,
             'meta' => [
                 'current_page' => $orders->currentPage(),
                 'last_page' => $orders->lastPage(),
                 'per_page' => $orders->perPage(),
                 'total' => $orders->total()
             ]
-        ]);
+        ];
+        
+        return $this->success_response('Orders retrieved successfully', $responseData);
     }
     
     /**
@@ -127,11 +126,7 @@ class OrderController extends Controller
             return $order;
         });
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Active orders retrieved successfully',
-            'data' => $orders
-        ]);
+        return $this->success_response('Active orders retrieved successfully', $orders);
     }
     
     /**
@@ -151,11 +146,7 @@ class OrderController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
         
         $query = Order::where('user_id', $user->id)
@@ -185,17 +176,17 @@ class OrderController extends Controller
             return $order;
         });
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Completed orders retrieved successfully',
-            'data' => $orders,
+        $responseData = [
+            'orders' => $orders,
             'meta' => [
                 'current_page' => $orders->currentPage(),
                 'last_page' => $orders->lastPage(),
                 'per_page' => $orders->perPage(),
                 'total' => $orders->total()
             ]
-        ]);
+        ];
+        
+        return $this->success_response('Completed orders retrieved successfully', $responseData);
     }
     
     /**
@@ -214,11 +205,7 @@ class OrderController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
         
         $query = Order::where('user_id', $user->id);
@@ -247,17 +234,17 @@ class OrderController extends Controller
             return $order;
         });
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Cancelled orders retrieved successfully',
-            'data' => $orders,
+        $responseData = [
+            'orders' => $orders,
             'meta' => [
                 'current_page' => $orders->currentPage(),
                 'last_page' => $orders->lastPage(),
                 'per_page' => $orders->perPage(),
                 'total' => $orders->total()
             ]
-        ]);
+        ];
+        
+        return $this->success_response('Cancelled orders retrieved successfully', $responseData);
     }
     
     /**
@@ -282,24 +269,16 @@ class OrderController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
         
         // Get service details
         $service = Service::find($request->service_id);
         if (!$service) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Service not found'
-            ], 404);
+            return $this->error_response('Service not found', null);
         }
         
         $price = $request->total_price_before_discount;
-
         
         // Apply discount if user has one (this is a placeholder - implement your discount logic)
         $discount = 0;
@@ -320,14 +299,10 @@ class OrderController extends Controller
         // Check payment method and verify wallet balance if needed
         if ($request->payment_method == 3) { // Wallet payment
             if ($user->balance < $priceAfterDiscount) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Insufficient wallet balance',
-                    'data' => [
-                        'available_balance' => $user->balance,
-                        'required_amount' => $priceAfterDiscount
-                    ]
-                ], 400);
+                return $this->error_response('Insufficient wallet balance', [
+                    'available_balance' => $user->balance,
+                    'required_amount' => $priceAfterDiscount
+                ]);
             }
         }
         
@@ -377,11 +352,7 @@ class OrderController extends Controller
         // TODO: Notify nearby drivers about new order
         // Implement your driver notification logic here
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Order created successfully',
-            'data' => $order
-        ], 201);
+        return $this->success_response('Order created successfully', $order);
     }
     
     /**
@@ -403,10 +374,7 @@ class OrderController extends Controller
             ->first();
         
         if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found'
-            ], 404);
+            return $this->error_response('Order not found', null);
         }
         
         // Add helper attributes
@@ -416,11 +384,7 @@ class OrderController extends Controller
         $order->distance = $order->getDistance();
         $order->discount_percentage = $order->getDiscountPercentage();
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Order details retrieved successfully',
-            'data' => $order
-        ]);
+        return $this->success_response('Order details retrieved successfully', $order);
     }
     
     /**
@@ -439,18 +403,12 @@ class OrderController extends Controller
             ->first();
         
         if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found'
-            ], 404);
+            return $this->error_response('Order not found', null);
         }
         
         // Check if order can be cancelled
         if (!in_array($order->status, [1, 2])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order cannot be cancelled at this stage'
-            ], 400);
+            return $this->error_response('Order cannot be cancelled at this stage', null);
         }
         
         $validator = Validator::make($request->all(), [
@@ -458,11 +416,7 @@ class OrderController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
         
         // Process cancellation
@@ -493,17 +447,13 @@ class OrderController extends Controller
             // You can use FCM or other push notification service
         }
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Order cancelled successfully',
-            'data' => [
-                'order_id' => $order->id,
-                'status' => $order->status,
-                'status_text' => $order->getStatusText(),
-                'cancellation_reason' => $order->reason_for_cancel
-            ]
-        ]);
+        $responseData = [
+            'order_id' => $order->id,
+            'status' => $order->status,
+            'status_text' => $order->getStatusText(),
+            'cancellation_reason' => $order->reason_for_cancel
+        ];
+        
+        return $this->success_response('Order cancelled successfully', $responseData);
     }
-    
-    
 }

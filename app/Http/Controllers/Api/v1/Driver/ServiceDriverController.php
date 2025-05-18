@@ -5,14 +5,19 @@ namespace App\Http\Controllers\Api\v1\Driver;
 
 use App\Http\Controllers\Controller;
 use App\Models\DriverService;
+use App\Traits\Responses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
+
 class ServiceDriverController extends Controller
 {
+    use Responses;
+
     public function storeOrUpdateStatus(Request $request)
     {
         $driver_id = auth()->guard('driver-api')->user()->id;
+        
         // Validate request
         $validator = Validator::make($request->all(), [
             'service_id' => 'required|exists:services,id',
@@ -20,11 +25,7 @@ class ServiceDriverController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+            return $this->error_response('Validation error', $validator->errors());
         }
 
         // Check if record exists
@@ -49,11 +50,6 @@ class ServiceDriverController extends Controller
             $message = 'Driver service created successfully';
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'data' => $driverService
-        ], 200);
+        return $this->success_response($message, $driverService);
     }
-
 }
