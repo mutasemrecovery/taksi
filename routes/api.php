@@ -44,6 +44,7 @@ Route::group(['prefix' => 'v1/user'], function () {
 
     Route::get('/settings', [SettingController::class, 'index']);
     Route::get('/services', [ServicesController::class, 'index']);
+    Route::get('/pages/{type}', [PageController::class, 'index']);
 
     // Auth Route
     Route::group(['middleware' => ['auth:user-api']], function () {
@@ -59,7 +60,6 @@ Route::group(['prefix' => 'v1/user'], function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/delete_account', [AuthController::class, 'deleteAccount']);
         Route::get('/userProfile', [AuthController::class, 'userProfile']);
-        Route::get('/pages/{type}', [PageController::class, 'index']);
 
         //Notification
         Route::get('/notifications', [AuthController::class, 'notifications']);

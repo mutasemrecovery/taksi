@@ -46,7 +46,7 @@
                           <option   @if(old('type')==1  || old('type')=="" ) selected="selected"  @endif value="1"> About Us</option>
                            <option @if( (old('type')==2 and old('type')!="")) selected="selected"  @endif   value="2"> Terms & Condition</option>
                            <option @if( (old('type')==3 and old('type')!="")) selected="selected"  @endif   value="3"> Privacy & Policy</option>
-                           <option @if( (old('type')==4 and old('type')!="")) selected="selected"  @endif   value="4"> How to use app</option>
+                           <option @if( (old('type')==4 and old('type')!="")) selected="selected"  @endif   value="4"> Help</option>
                           </select>
                           @error('type')
                           <span class="text-danger">{{ $message }}</span>
