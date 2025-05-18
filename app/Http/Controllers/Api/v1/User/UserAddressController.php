@@ -36,6 +36,7 @@ class UserAddressController extends Controller
             $validator = Validator::make($request->all(), [
                 'user_id' => 'sometimes|exists:users,id',
                 'name' => 'required|string|max:255',
+                'address' => 'nullable',
                 'lat' => 'required|numeric',
                 'lng' => 'required|numeric',
             ]);
@@ -50,7 +51,7 @@ class UserAddressController extends Controller
             }
 
             $address = UserAddress::create($request->only([
-                'user_id', 'name', 'lat', 'lng'
+                'user_id', 'name','address', 'lat', 'lng'
             ]));
 
             return $this->success_response('Address created successfully', $address);
@@ -90,6 +91,7 @@ class UserAddressController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'name' => 'sometimes|string|max:255',
+                'address' => 'nullable',
                 'lat' => 'sometimes|numeric',
                 'lng' => 'sometimes|numeric',
             ]);
@@ -99,7 +101,7 @@ class UserAddressController extends Controller
             }
 
             $address->update($request->only([
-                'name', 'lat', 'lng'
+                'name', 'lat', 'lng','address'
             ]));
 
             return $this->success_response('Address updated successfully', $address);
@@ -120,7 +122,7 @@ class UserAddressController extends Controller
             }
 
             // Check if the authenticated user is authorized to delete this address
-            if (Auth::id() != $address->user_id && !Auth::user()->hasRole('admin')) {
+            if (Auth::id() != $address->user_id ) {
                 return $this->error_response('Unauthorized access', null);
             }
 
