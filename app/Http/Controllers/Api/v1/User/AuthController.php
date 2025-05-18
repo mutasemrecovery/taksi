@@ -119,6 +119,7 @@ class AuthController extends Controller
         if ($userType == 'driver') {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
+                'country_code' => 'required',
                 'phone' => 'required|string|unique:drivers',
                 'email' => 'nullable|email|unique:drivers',
                 'fcm_token' => 'nullable|string',
@@ -128,6 +129,7 @@ class AuthController extends Controller
         } else {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
+                'country_code' => 'required',
                 'phone' => 'required|string|unique:users',
                 'email' => 'nullable|email|unique:users',
                 'fcm_token' => 'nullable|string',
@@ -147,6 +149,7 @@ class AuthController extends Controller
         if ($userType == 'driver') {
             $user = \App\Models\Driver::create([
                 'name' => $request->name,
+                'country_code' => $request->country_code,
                 'phone' => $request->phone,
                 'email' => $request->email,
                 'fcm_token' => $request->fcm_token,
@@ -158,6 +161,7 @@ class AuthController extends Controller
         } else {
             $user = User::create([
                 'name' => $request->name,
+                'country_code' => $request->country_code,
                 'phone' => $request->phone,
                 'email' => $request->email,
                 'fcm_token' => $request->fcm_token,
