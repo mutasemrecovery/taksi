@@ -32,19 +32,33 @@ class AuthController extends Controller
 
     public function deleteAccount(Request $request)
     {
-        $user = auth()->user(); // Get the authenticated user
-
-        if (!$user) {
-            return $this->error_response('User not authenticated', null);
-        }
-
         try {
-            // Update the `activate` column to 2
-            $user->update(['activate' => 2]);
-
-            return $this->success_response('Account Deleted successfully', null);
+            // Check both authentication guards
+            $userApi = auth('user-api')->user();
+            $driverApi = auth('driver-api')->user();
+            
+            if ($userApi) {
+                // Regular user account deactivation
+                $userApi->update(['activate' => 2]);
+                
+                // Revoke all tokens for the user
+                $userApi->tokens()->delete();
+                
+                return $this->success_response('User account deleted successfully', null);
+            } elseif ($driverApi) {
+                // Driver account deactivation
+                $driverApi->update(['activate' => 2]);
+                
+                // Revoke all tokens for the driver
+                $driverApi->tokens()->delete();
+                
+                return $this->success_response('Driver account deleted successfully', null);
+            } else {
+                return $this->error_response('Unauthenticated', [], 401);
+            }
         } catch (\Exception $e) {
-            return $this->error_response('Failed to deactivate account', ['error' => $e->getMessage()]);
+            \Log::error('Account deletion error: ' . $e->getMessage());
+            return $this->error_response('Failed to delete account', ['error' => $e->getMessage()]);
         }
     }
        public function logout()
@@ -195,42 +209,93 @@ class AuthController extends Controller
 
     public function userProfile()
     {
-        // Authenticate the user
-        $user = auth()->user();
-
-        // Return the user's profile
-        return $this->success_response('User profile retrieved', $user);
+        try {
+            // Check both authentication guards
+            $userApi = auth('user-api')->user();
+            $driverApi = auth('driver-api')->user();
+            
+            if ($userApi) {
+                // If it's a regular user
+                return $this->success_response('User profile retrieved', $userApi);
+            } elseif ($driverApi) {
+                // If it's a driver, make sure photo URL is properly formatted
+                // This assumes you've added the photo_url accessor to your Driver model
+                return $this->success_response('Driver profile retrieved', $driverApi);
+            } else {
+                return $this->error_response('Unauthenticated', [], 401);
+            }
+        } catch (\Throwable $th) {
+            \Log::error('Profile retrieval error: ' . $th->getMessage());
+            return $this->error_response('Failed to retrieve profile', []);
+        }
     }
 
     public function updateProfile(Request $request)
     {
-        // Authenticate the user
-        $user = auth()->user();
-
-        // Validate input data
-        $validator = Validator::make($request->all(), [
-            'name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|unique:users,email,' . $user->id, // Ensure email is unique
-            'phone' => 'nullable|string',
-            'photo' => 'nullable|image|max:2048', // Optional photo upload
-        ]);
-
-        if ($validator->fails()) {
-            return $this->error_response('Validation error', $validator->errors());
+        try {
+            // Check both authentication guards
+            $userApi = auth('user-api')->user();
+            $driverApi = auth('driver-api')->user();
+            
+            // Determine which type of user is authenticated
+            if ($userApi) {
+                $user = $userApi;
+                $userType = 'user';
+                $table = 'users';
+            } elseif ($driverApi) {
+                $user = $driverApi;
+                $userType = 'driver';
+                $table = 'drivers';
+            } else {
+                return $this->error_response('Unauthenticated', [], 401);
+            }
+            
+            // Customize validation rules based on user type
+            $validationRules = [
+                'name' => 'nullable|string|max:255',
+                'email' => 'nullable|email|unique:' . $table . ',email,' . $user->id,
+                'phone' => 'nullable|string',
+                'sos_phone' => 'nullable|string',
+                'photo' => 'nullable|image|max:2048',
+            ];
+            
+            // Add driver-specific validation rules if needed
+            if ($userType == 'driver') {
+                // For example:
+                // $validationRules['license_number'] = 'nullable|string';
+            }
+            
+            // Validate input data
+            $validator = Validator::make($request->all(), $validationRules);
+            
+            if ($validator->fails()) {
+                return $this->error_response('Validation error', $validator->errors());
+            }
+            
+            // Get fillable fields based on user type
+            $data = $request->only(['name', 'email', 'phone', 'sos_phone']);
+            
+            // Add driver-specific fields if needed
+            if ($userType == 'driver') {
+                // For example:
+                // $driverFields = $request->only(['license_number', 'car_model']);
+                // $data = array_merge($data, $driverFields);
+            }
+            
+            // Handle file upload for photo (if provided)
+            if ($request->hasFile('photo')) {
+                // Use the same upload path for all user types
+                $data['photo'] = uploadImage('assets/admin/uploads', $request->file('photo'));
+            }
+            
+            // Update user data
+            $user->update($data);
+            
+            return $this->success_response(ucfirst($userType) . ' profile updated successfully', $user);
+        } catch (\Throwable $th) {
+            \Log::error('Profile update error: ' . $th->getMessage());
+            return $this->error_response('Failed to update profile', []);
         }
-
-        $data = $request->only(['name', 'email', 'phone']);
-
-        // Handle file upload for photo (if provided)
-        if ($request->has('photo')) {
-            $data['photo'] = uploadImage('assets/admin/uploads', $request->photo);
-        }
-
-        // Update user data
-        $user->update($data);
-
-        // Return updated user data
-        return $this->success_response('Profile updated successfully', $user);
     }
 
     public function notifications()
