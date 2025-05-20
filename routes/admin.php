@@ -87,12 +87,18 @@ Route::get('wallet_transactions/filter', [WalletTransactionController::class, 'f
 Route::get('users/{id}/transactions', [WalletTransactionController::class, 'userTransactions'])->name('wallet_transactions.userTransactions');
 Route::get('drivers/{id}/transactions', [WalletTransactionController::class, 'driverTransactions'])->name('wallet_transactions.driverTransactions');
 
- Route::resource('orders', OrderController::class);
-    Route::get('orders/filter', [OrderController::class, 'filter'])->name('orders.filter');
-    Route::post('orders/update-status/{id}', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
-    Route::post('orders/update-payment-status/{id}', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
-    Route::get('users/{id}/orders', [OrderController::class, 'userOrders'])->name('orders.userOrders');
-    Route::get('drivers/{id}/orders', [OrderController::class, 'driverOrders'])->name('orders.driverOrders');
+Route::resource('orders', OrderController::class);
+Route::get('orders/filter', [OrderController::class, 'filter'])->name('orders.filter');
+Route::post('orders/update-status/{id}', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+Route::post('orders/update-payment-status/{id}', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
+Route::get('users/{id}/orders', [OrderController::class, 'userOrders'])->name('orders.userOrders');
+Route::get('drivers/{id}/orders', [OrderController::class, 'driverOrders'])->name('orders.driverOrders');
+
+// functionloty routes
+Route::post('drivers/topUp/{id}', [DriverController::class, 'topUp'])->name('drivers.topUp');
+Route::get('drivers/transactions/{id}', [DriverController::class, 'transactions'])->name('drivers.transactions');
+
+
 });
 });
 

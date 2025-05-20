@@ -35,7 +35,6 @@
                     @if($driver->email)
                     <p class="text-muted mb-1">{{ $driver->email }}</p>
                     @endif
-                    <p class="mb-2">{{ $driver->option->name ?? 'N/A' }}</p>
                     <div class="mt-3">
                         @if($driver->activate == 1)
                         <span class="badge badge-success px-3 py-2">{{ __('messages.Active') }}</span>
@@ -116,21 +115,21 @@
                                     <td>{{ $driver->email ?? __('messages.Not_Available') }}</td>
                                 </tr>
                                 <tr>
-                                    <th>{{ __('messages.Option') }}</th>
-                                    <td>{{ $driver->option->name ?? __('messages.Not_Available') }}</td>
+                                   
+                                      <th> {{ __('messages.Options') }}</th>
+                                    <td>
+                                       @foreach($driver->options as $option)
+                                           <span class="badge badge-success m-1">
+                                               {{ $option->name }} 
+                                           </span>
+                                       @endforeach                         
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th>{{ __('messages.Balance') }}</th>
                                     <td>{{ $driver->balance }}</td>
                                 </tr>
-                                <tr>
-                                    <th>{{ __('messages.FCM_Token') }}</th>
-                                    <td>
-                                        <div style="max-width: 100%; overflow-x: auto;">
-                                            <small>{{ $driver->fcm_token ?? __('messages.Not_Available') }}</small>
-                                        </div>
-                                    </td>
-                                </tr>
+                             
                                 <tr>
                                     <th>{{ __('messages.Status') }}</th>
                                     <td>

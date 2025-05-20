@@ -68,15 +68,11 @@ return [
     'Plate_Number' => 'Plate Number',
     'Car_Photo' => 'Car Photo',
     'No_Car_Photo' => 'No Car Photo',
-
-    // Documents
     'Documents' => 'Documents',
     'Driving_License_Front' => 'Driving License (Front)',
     'Driving_License_Back' => 'Driving License (Back)',
     'Car_License_Front' => 'Car License (Front)',
     'Car_License_Back' => 'Car License (Back)',
-
-    // Messages
     'Type' => 'Type',
 
     // not translate
@@ -92,8 +88,6 @@ return [
     'Service_Created_Successfully' => 'Service created successfully',
     'Service_Updated_Successfully' => 'Service updated successfully',
     'Service_Deleted_Successfully' => 'Service deleted successfully',
-
-    // Service Fields
     'Name_English' => 'Name (English)',
     'Name_Arabic' => 'Name (Arabic)',
     'Start_Price' => 'Start Price',
@@ -121,7 +115,6 @@ return [
     'Admin_Fee_Example' => 'Admin Fee Example',
     'Fixed_Amount_Per_Trip' => 'Fixed Amount Per Trip',
     'For_100_Trip_Cost' => 'For 100 Trip Cost',
-  // Coupons
     'Coupons' => 'Coupons',
     'Coupon' => 'Coupon',
     'Coupons_List' => 'Coupons List',
@@ -134,8 +127,6 @@ return [
     'Coupon_Updated_Successfully' => 'Coupon updated successfully',
     'Coupon_Deleted_Successfully' => 'Coupon deleted successfully',
     'Coupon_Toggle_Success' => 'Coupon has been :status successfully',
-    
-    // Coupon Fields
     'Coupon_Code' => 'Coupon Code',
     'Coupon_Code_Info' => 'Enter a unique code or click to generate a random one',
     'Discount_Value' => 'Discount Value',
@@ -210,5 +201,24 @@ return [
     'view' => 'View',
     'save' => 'Save',
     'cancel' => 'Cancel',
+    'Waiting Approve' => 'Waiting Approve',
+    'Top_Up_Balance_For' => 'Top Up Balance For',
+    'Amount' => 'Amount',
+    'Note' => 'Note',
+    'Current_Balance' => 'Current Balance',
+    'Add_To_Balance' => 'Add to balance',
+    'Close' => 'Close',
+    'Wallet Transactions' => 'Wallet Transactions',
+    'Back' => 'Back',
+    'Date' => 'Date',
+    'Added_By' => 'Added By',
+    'Recent_Transactions' => 'Recent Transactions',
+    'Added' => 'Added',
+    '' => '',
+    '' => '',
+    '' => '',
+    '' => '',
+    '' => '',
+    '' => '',
 ];
 

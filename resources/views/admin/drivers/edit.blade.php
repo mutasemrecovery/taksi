@@ -67,7 +67,7 @@
                                             checked
                                         @endif
                                         >
-                                        <span></span>{{ $option->name_en }} ({{ $option->name_ar }})
+                                        <span>{{ $option->name }} </span>
                                     </label>
                                 @endforeach
                             </div>
@@ -86,6 +86,7 @@
                             <select class="form-control" id="activate" name="activate">
                                 <option value="1" {{ old('activate', $driver->activate) == 1 ? 'selected' : '' }}>{{ __('messages.Active') }}</option>
                                 <option value="2" {{ old('activate', $driver->activate) == 2 ? 'selected' : '' }}>{{ __('messages.Inactive') }}</option>
+                                <option value="3" {{ old('activate', $driver->activate) == 3 ? 'selected' : '' }}>{{ __('messages.Waiting Approve') }}</option>
                             </select>
                         </div>
                     </div>

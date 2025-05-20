@@ -135,8 +135,8 @@
                        <div class="form-group">
                             <label for="activate">{{ __('messages.Status') }} <span class="text-danger">*</span></label>
                             <select class="form-control" id="activate" name="activate" required>
-                                <option value="1" {{ old('activate', $coupon->activate) == 1 ? 'selected' : '' }}>{{ __('messages.Active') }}</option>
-                                <option value="2" {{ old('activate', $coupon->activate) == 2 ? 'selected' : '' }}>{{ __('messages.Inactive') }}</option>
+                                <option value="1" {{ old('activate', $service->activate) == 1 ? 'selected' : '' }}>{{ __('messages.Active') }}</option>
+                                <option value="2" {{ old('activate', $service->activate) == 2 ? 'selected' : '' }}>{{ __('messages.Inactive') }}</option>
                             </select>
                         </div>
                 </div>

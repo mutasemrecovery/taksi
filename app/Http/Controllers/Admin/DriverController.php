@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Driver;
 use App\Models\Option;
+use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -118,7 +120,7 @@ class DriverController extends Controller
      */
     public function show($id)
     {
-        $driver = Driver::with('option')->findOrFail($id);
+        $driver = Driver::with('options')->findOrFail($id);
         
         return view('admin.drivers.show', compact('driver'));
     }
@@ -247,6 +249,49 @@ class DriverController extends Controller
         return redirect()
             ->route('drivers.index')
             ->with('success', 'Driver deleted successfully');
+    }
+
+    public function topUp(Request $request, $id)
+    {
+        $driver = Driver::findOrFail($id);
+        
+        if ($request->isMethod('post')) {
+            $request->validate([
+                'amount' => 'required|numeric|min:0.01',
+                'note' => 'nullable|string|max:255',
+            ]);
+            
+            DB::beginTransaction();
+            try {
+                // Update driver balance
+                $driver->balance += $request->amount;
+                $driver->save();
+                
+                // Create transaction record
+                WalletTransaction::create([
+                    'driver_id' => $driver->id,
+                    'admin_id' => auth()->guard('admin')->user()->id,
+                    'amount' => $request->amount,
+                    'type_of_transaction' => 1, // 1 for add
+                    'note' => $request->note ?? 'Balance top-up by admin',
+                ]);
+                
+                DB::commit();
+                return redirect()->route('drivers.index')
+                    ->with('success', __('messages.Balance_Updated_Successfully'));
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return redirect()->back()
+                    ->with('error', __('messages.Something_Went_Wrong'));
+            }
+        }
+        
+    }
+
+    public function transactions($id)
+    {
+        $driver = Driver::with('walletTransactions')->where('id',$id)->first();
+        return view('admin.drivers.transactions',compact('driver'));
     }
 
 }
