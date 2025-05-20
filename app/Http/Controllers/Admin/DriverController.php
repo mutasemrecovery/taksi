@@ -19,7 +19,7 @@ class DriverController extends Controller
      */
     public function index()
     {
-        $drivers = Driver::with('option')->get();
+        $drivers = Driver::with('options')->get();
         
         return view('admin.drivers.index', compact('drivers'));
     }
