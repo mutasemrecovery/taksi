@@ -8,32 +8,77 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 
 
-
 class Driver extends Authenticatable
 {
-   use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
-   
-   protected $guarded = [];
+    protected $guarded = [];
 
-   protected $hidden = [
-      'password',
-      'remember_token',
-   ];
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
-      // Append the photo_url attribute to JSON responses
-    protected $appends = ['photo_url'];
+    // Add all photo URL attributes to the appends array
+    protected $appends = [
+        'photo_url',
+        'photo_of_car_url',
+        'driving_license_front_url',
+        'driving_license_back_url',
+        'car_license_front_url',
+        'car_license_back_url'
+    ];
     
-    // Add a custom accessor for the photo URL
-    public function getPhotoUrlAttribute()
+    /**
+     * Helper method to generate image URLs
+     *
+     * @param string|null $imageName
+     * @return string|null
+     */
+    protected function getImageUrl($imageName)
     {
-        if ($this->photo) {
-            // Use the APP_URL from the .env file
+        if ($imageName) {
             $baseUrl = rtrim(config('app.url'), '/');
-            return $baseUrl . '/assets/admin/uploads/' . $this->photo;
+            return $baseUrl . '/assets/admin/uploads/' . $imageName;
         }
         
         return null;
+    }
+    
+    // Accessor for photo URL
+    public function getPhotoUrlAttribute()
+    {
+        return $this->getImageUrl($this->photo);
+    }
+    
+    // Accessor for photo_of_car URL
+    public function getPhotoOfCarUrlAttribute()
+    {
+        return $this->getImageUrl($this->photo_of_car);
+    }
+    
+    // Accessor for driving_license_front URL
+    public function getDrivingLicenseFrontUrlAttribute()
+    {
+        return $this->getImageUrl($this->driving_license_front);
+    }
+    
+    // Accessor for driving_license_back URL
+    public function getDrivingLicenseBackUrlAttribute()
+    {
+        return $this->getImageUrl($this->driving_license_back);
+    }
+    
+    // Accessor for car_license_front URL
+    public function getCarLicenseFrontUrlAttribute()
+    {
+        return $this->getImageUrl($this->car_license_front);
+    }
+    
+    // Accessor for car_license_back URL
+    public function getCarLicenseBackUrlAttribute()
+    {
+        return $this->getImageUrl($this->car_license_back);
     }
     
    public function options()
