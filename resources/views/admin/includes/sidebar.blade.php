@@ -1,194 +1,164 @@
+<!-- Main Sidebar -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <a href="#" class="brand-link">
-        <img src="{{ asset('assets/admin/dist/img/AdminLTELogo.png') }}" alt="AdminLTE Logo"
+    <a href="{{ route('admin.dashboard') }}" class="brand-link">
+        <img src="{{ asset('assets/admin/dist/img/AdminLTELogo.png') }}" alt="App Logo"
             class="brand-image img-circle elevation-3" style="opacity: .8">
-        <span class="brand-text font-weight-light">Quran</span>
+        <span class="brand-text font-weight-light">Taksi</span>
     </a>
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <!-- Sidebar user panel (optional) -->
+        <!-- User Panel -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-            <div class="image">
-                <img src="{{ asset('assets/admin/dist/img/user2-160x160.jpg') }}" class="img-circle elevation-2"
-                    alt="User Image">
-            </div>
             <div class="info">
-                <a href="#" class="d-block">{{ auth()->user()->name }}</a>
+              <h4 style="color: white; margin:auto;"> {{ auth()->user()->name }}</h4>
             </div>
         </div>
 
         <!-- Sidebar Menu -->
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                <!-- Add icons to the links using the .nav-icon class
-                     with font-awesome or any other icon font library -->
-
-
-                @if (
-                $user->can('user-table') ||
-                $user->can('user-add') ||
-                $user->can('user-edit') ||
-                $user->can('user-delete'))
+                
+                <!-- Dashboard -->
                 <li class="nav-item">
-                    <a href="{{ route('users.index') }}" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p> {{__('messages.users')}} </p>
+                    <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-tachometer-alt"></i>
+                        <p>{{ __('messages.dashboard') }}</p>
                     </a>
                 </li>
-                @endif
-
-              @if (
-                $user->can('driver-table') ||
-                $user->can('driver-add') ||
-                $user->can('driver-edit') ||
-                $user->can('driver-delete'))
-                <li class="nav-item">
-                    <a href="{{ route('drivers.index') }}" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p> {{__('messages.drivers')}} </p>
-                    </a>
-                </li>
-                @endif
-              @if (
-                $user->can('service-table') ||
-                $user->can('service-add') ||
-                $user->can('service-edit') ||
-                $user->can('service-delete'))
-                <li class="nav-item">
-                    <a href="{{ route('services.index') }}" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p> {{__('messages.services')}} </p>
-                    </a>
-                </li>
-                @endif
-              @if (
-                $user->can('coupon-table') ||
-                $user->can('coupon-add') ||
-                $user->can('coupon-edit') ||
-                $user->can('coupon-delete'))
-                <li class="nav-item">
-                    <a href="{{ route('coupons.index') }}" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p> {{__('messages.coupons')}} </p>
-                    </a>
-                </li>
-                @endif
-
-        
-
-                @if (
-                $user->can('notification-table') ||
-                $user->can('notification-add') ||
-                $user->can('notification-edit') ||
-                $user->can('notification-delete'))
-                <li class="nav-item">
-                    <a href="{{ route('notifications.create') }}" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p> {{__('messages.notifications')}} </p>
-                    </a>
-                </li>
-                @endif
-
-
-
-
-                {{-- <li class="nav-item has-treeview">
+                
+                <!-- User Management Section -->
+                @canany(['user-table', 'user-add', 'user-edit', 'user-delete', 'driver-table', 'driver-add', 'driver-edit', 'driver-delete'])
+                <li class="nav-item {{ request()->is('admin/users*') || request()->is('admin/drivers*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
+                        <i class="nav-icon fas fa-users"></i>
                         <p>
-                            {{ __('messages.reports') }}
+                            {{ __('messages.user_management') }}
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        @canany(['user-table', 'user-add', 'user-edit', 'user-delete'])
+                        <li class="nav-item">
+                            <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.index') ? 'active' : '' }}">
+                                <i class="far fa-user nav-icon"></i>
+                                <p>{{ __('messages.users') }}</p>
+                            </a>
+                        </li>
+                        @endcanany
+                        
+                        @canany(['driver-table', 'driver-add', 'driver-edit', 'driver-delete'])
+                        <li class="nav-item">
+                            <a href="{{ route('drivers.index') }}" class="nav-link {{ request()->routeIs('drivers.index') ? 'active' : '' }}">
+                                <i class="fas fa-car nav-icon"></i>
+                                <p>{{ __('messages.drivers') }}</p>
+                            </a>
+                        </li>
+                        @endcanany
+                    </ul>
+                </li>
+                @endcanany
+                
+                <!-- Services & Coupons -->
+                @canany(['service-table', 'service-add', 'service-edit', 'service-delete', 'coupon-table', 'coupon-add', 'coupon-edit', 'coupon-delete'])
+                <li class="nav-item {{ request()->is('admin/services*') || request()->is('admin/coupons*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-concierge-bell"></i>
+                        <p>
+                            {{ __('messages.service_management') }}
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        @canany(['service-table', 'service-add', 'service-edit', 'service-delete'])
+                        <li class="nav-item">
+                            <a href="{{ route('services.index') }}" class="nav-link {{ request()->routeIs('services.index') ? 'active' : '' }}">
+                                <i class="fas fa-handshake nav-icon"></i>
+                                <p>{{ __('messages.services') }}</p>
+                            </a>
+                        </li>
+                        @endcanany
+                        
+                        @canany(['coupon-table', 'coupon-add', 'coupon-edit', 'coupon-delete'])
+                        <li class="nav-item">
+                            <a href="{{ route('coupons.index') }}" class="nav-link {{ request()->routeIs('coupons.index') ? 'active' : '' }}">
+                                <i class="fas fa-ticket-alt nav-icon"></i>
+                                <p>{{ __('messages.coupons') }}</p>
+                            </a>
+                        </li>
+                        @endcanany
+                    </ul>
+                </li>
+                @endcanany
+
+                <!-- Notifications -->
+                @canany(['notification-table', 'notification-add', 'notification-edit', 'notification-delete'])
+                <li class="nav-item">
+                    <a href="{{ route('notifications.create') }}" class="nav-link {{ request()->routeIs('notifications.create') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-bell"></i>
+                        <p>{{ __('messages.notifications') }}</p>
+                    </a>
+                </li>
+                @endcanany
+
+                <!-- Content Management -->
+                @canany(['page-table', 'page-add', 'page-edit', 'page-delete'])
+                <li class="nav-item">
+                    <a href="{{ route('pages.index') }}" class="nav-link {{ request()->routeIs('pages.index') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-file-alt"></i>
+                        <p>{{ __('messages.pages') }}</p>
+                    </a>
+                </li>
+                @endcanany
+
+                <!-- System Settings -->
+                <li class="nav-item {{ request()->is('admin/settings*') || request()->is('admin/roles*') || request()->is('admin/employees*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-cogs"></i>
+                        <p>
+                            {{ __('messages.system_settings') }}
                             <i class="right fas fa-angle-left"></i>
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
-                            <a href="{{ route('inventory_report') }}" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p> {{ __('messages.inventory_report_with_costs') }} </p>
+                            <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.index') ? 'active' : '' }}">
+                                <i class="fas fa-wrench nav-icon"></i>
+                                <p>{{ __('messages.general_settings') }}</p>
                             </a>
                         </li>
+                        
+                        @canany(['role-table', 'role-add', 'role-edit', 'role-delete'])
                         <li class="nav-item">
-                            <a href="{{ route('order_report') }}" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p> {{ __('messages.order_report') }} </p>
+                            <a href="{{ route('admin.role.index') }}" class="nav-link {{ request()->routeIs('admin.role.index') ? 'active' : '' }}">
+                                <i class="fas fa-user-shield nav-icon"></i>
+                                <p>{{ __('messages.roles') }}</p>
                             </a>
                         </li>
+                        @endcanany
+                        
+                        @canany(['employee-table', 'employee-add', 'employee-edit', 'employee-delete'])
                         <li class="nav-item">
-                            <a href="{{ route('product_move') }}" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p> {{ __('messages.product_move') }} </p>
+                            <a href="{{ route('admin.employee.index') }}" class="nav-link {{ request()->routeIs('admin.employee.index') ? 'active' : '' }}">
+                                <i class="fas fa-user-tie nav-icon"></i>
+                                <p>{{ __('messages.employees') }}</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ route('tax_report') }}" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p> {{ __('messages.tax_report') }} </p>
-                            </a>
-                        </li>
-
+                        @endcanany
                     </ul>
-                </li> --}}
+                </li>
 
-                @if (
-                    $user->can('page-table') ||
-                        $user->can('page-add') ||
-                        $user->can('page-edit') ||
-                        $user->can('page-delete'))
-                    <li class="nav-item">
-                        <a href="{{ route('pages.index') }}" class="nav-link">
-                            <i class="far fa-circle nav-icon"></i>
-                            <p>{{__('messages.Pages')}} </p>
-                        </a>
-                    </li>
-                    @endif
-
-
-
-
+                <!-- Account -->
                 <li class="nav-item">
-                    <a href="{{ route('settings.index') }}" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p>{{__('messages.Settings')}} </p>
+                    <a href="{{ route('admin.login.edit', auth()->user()->id) }}" class="nav-link {{ request()->routeIs('admin.login.edit') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-user-cog"></i>
+                        <p>{{ __('messages.admin_account') }}</p>
                     </a>
                 </li>
 
-
-
-                <li class="nav-item">
-                    <a href="{{ route('admin.login.edit',auth()->user()->id) }}" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p>{{__('messages.Admin_account')}} </p>
-                    </a>
-                </li>
-
-                @if ($user->can('role-table') || $user->can('role-add') || $user->can('role-edit') ||
-                $user->can('role-delete'))
-                <li class="nav-item">
-                    <a href="{{ route('admin.role.index') }}" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <span>{{__('messages.Roles')}} </span>
-                    </a>
-                </li>
-                @endif
-
-                @if (
-                $user->can('employee-table') ||
-                $user->can('employee-add') ||
-                $user->can('employee-edit') ||
-                $user->can('employee-delete'))
-                <li class="nav-item">
-                    <a href="{{ route('admin.employee.index') }}" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <span> {{__('messages.Employee')}} </span>
-                    </a>
-                </li>
-                @endif
-
+               
             </ul>
         </nav>
-        <!-- /.sidebar-menu -->
     </div>
-    <!-- /.sidebar -->
 </aside>

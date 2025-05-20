@@ -78,6 +78,51 @@ return [
 
     // Messages
     'Type' => 'النوع',
+    // App General
+    'app_name' => 'تطبيق القرآن',
+    'user_image' => 'صورة المستخدم',
+    'dashboard' => 'لوحة التحكم',
+    'logout' => 'تسجيل الخروج',
+    
+    // User Management
+    'user_management' => 'إدارة المستخدمين',
+    'users' => 'المستخدمين',
+    'drivers' => 'السائقين',
+    
+    // Service Management
+    'service_management' => 'إدارة الخدمات',
+    'services' => 'الخدمات',
+    'coupons' => 'كوبونات الخصم',
+    
+    // Communication
+    'notifications' => 'الإشعارات',
+    
+    // Content Management
+    'pages' => 'الصفحات',
+    
+    // System Settings
+    'system_settings' => 'إعدادات النظام',
+    'general_settings' => 'الإعدادات العامة',
+    'settings' => 'الإعدادات',
+    'roles' => 'الأدوار',
+    'employees' => 'الموظفين',
+    'admin_account' => 'حسابي',
+    
+    // Reports
+    'reports' => 'التقارير',
+    'inventory_report_with_costs' => 'تقرير المخزون مع التكاليف',
+    'order_report' => 'تقرير الطلبات',
+    'product_move' => 'حركة المنتجات',
+    'tax_report' => 'تقرير الضرائب',
+    
+    // Actions
+    'create' => 'إنشاء',
+    'edit' => 'تعديل',
+    'delete' => 'حذف',
+    'view' => 'عرض',
+    'save' => 'حفظ',
+    'cancel' => 'إلغاء',
+
     ""=>"",
     ""=>"",
     ""=>"",
