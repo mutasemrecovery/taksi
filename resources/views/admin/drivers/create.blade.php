@@ -52,14 +52,25 @@
                             <input type="password" class="form-control" id="password" name="password" required>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="option_id">{{ __('messages.Option') }} <span class="text-danger">*</span></label>
-                            <select class="form-control" id="option_id" name="option_id" required>
-                                <option value="">{{ __('messages.Select_Option') }}</option>
+                          <div class="form-group">
+                            <label>{{ __('Options') }}</label>
+                            <div class="checkbox-list">
                                 @foreach($options as $option)
-                                <option value="{{ $option->id }}" {{ old('option_id') == $option->id ? 'selected' : '' }}>{{ $option->name }}</option>
+                                    <label class="checkbox">
+                                        <input type="checkbox" name="option_ids[]" value="{{ $option->id }}" 
+                                        @if(isset($driver) && $driver->options->contains($option->id))
+                                            checked
+                                        @elseif(old('option_ids') && in_array($option->id, old('option_ids')))
+                                            checked
+                                        @endif
+                                        >
+                                        <span></span>{{ $option->name_en }} ({{ $option->name_ar }})
+                                    </label>
                                 @endforeach
-                            </select>
+                            </div>
+                            @error('option_ids')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         
                         <div class="form-group">

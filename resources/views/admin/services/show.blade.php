@@ -43,7 +43,22 @@
                 </div>
                 <div class="card-body">
                     <div class="text-center mb-3">
-                        <span class="badge badge-primary px-3 py-2">{{ $service->getPaymentMethodText() }}</span>
+                      <div class="form-group">
+                            <label>{{ __('Payment Methods') }}</label>
+                            <div>
+                                @foreach($service->servicePayments as $payment)
+                                    <span class="badge badge-success m-1">
+                                        @if($payment->payment_method == 1)
+                                            {{ __('Cash') }}
+                                        @elseif($payment->payment_method == 2)
+                                            {{ __('Visa') }}
+                                        @elseif($payment->payment_method == 3)
+                                            {{ __('Wallet') }}
+                                        @endif
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="table-responsive">

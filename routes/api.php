@@ -121,7 +121,8 @@ Route::group(['prefix' => 'v1/driver'], function () {
         Route::post('/notifications', [AuthController::class, 'sendToUser']);
 
         Route::get('/ratings', [RatingDriverController::class, 'index']);
-        Route::get('/storeOrUpdateStatus', [ServiceDriverController::class, 'storeOrUpdateStatus']);
+        Route::get('/getServices', [ServiceDriverController::class, 'index']);
+        Route::post('/storeOrUpdateStatus', [ServiceDriverController::class, 'storeOrUpdateStatus']);
         Route::get('/wallet/transactions', [WalletDriverController::class, 'getTransactions']);
 
         Route::get('/complaints', [ComplaintDriverController::class, 'getTransactions']);

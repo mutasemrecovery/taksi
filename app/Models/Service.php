@@ -18,6 +18,24 @@ class Service extends Model
         return $locale == 'ar' ? $this->name_ar : $this->name_en;
     }
 
+    public function servicePayments()
+    {
+        return $this->hasMany(ServicePayment::class);
+    }
+
+     public function drivers()
+    {
+        return $this->belongsToMany(Driver::class, 'driver_services')
+            ->withPivot('status')
+            ->withTimestamps();
+    }
+
+    // Add a direct relationship to driver_services
+    public function driverServices()
+    {
+        return $this->hasMany(DriverService::class);
+    }
+    
     /**
      * Get the type of commission text.
      * 

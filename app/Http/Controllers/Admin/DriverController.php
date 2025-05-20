@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Driver;
 use App\Models\Option;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -45,15 +46,15 @@ class DriverController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'country_code' => 'required',
             'phone' => 'required|string|unique:drivers',
             'email' => 'nullable|email|unique:drivers',
+            'sos_phone' => 'nullable|string',
+            'option_ids' => 'required|array',
+            'option_ids.*' => 'required|exists:options,id',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'fcm_token' => 'nullable|string',
-            'balance' => 'nullable|numeric',
-            'activate' => 'nullable|in:1,2',
-            'option_id' => 'required|exists:options,id',
             
-            // Car information
+            // Car details
             'photo_of_car' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'model' => 'nullable|string|max:255',
             'production_year' => 'nullable|string|max:4',
@@ -98,8 +99,12 @@ class DriverController extends Controller
             }
         }
 
-        Driver::create($driverData);
+        $driver =  Driver::create($driverData);
 
+        // Attach options to the driver
+            if ($request->has('option_ids') && is_array($request->option_ids)) {
+                $driver->options()->attach($request->option_ids);
+            }
         return redirect()
             ->route('drivers.index')
             ->with('success', 'Driver created successfully');
@@ -144,28 +149,27 @@ class DriverController extends Controller
         $driver = Driver::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
-            'phone' => 'sometimes|string|unique:drivers,phone,' . $id,
-            'email' => 'nullable|email|unique:drivers,email,' . $id,
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'fcm_token' => 'nullable|string',
-            'balance' => 'nullable|numeric',
-            'activate' => 'nullable|in:1,2',
-            'option_id' => 'sometimes|exists:options,id',
-            'password' => 'nullable|min:6',
-            
-            // Car information
-            'photo_of_car' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'model' => 'nullable|string|max:255',
-            'production_year' => 'nullable|string|max:4',
-            'color' => 'nullable|string|max:255',
-            'plate_number' => 'nullable|string|max:255',
-            
-            // Documents
-            'driving_license_front' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'driving_license_back' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'car_license_front' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'car_license_back' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'name' => 'required|string|max:255',
+        'country_code' => 'required',
+        'phone' => 'required|string|unique:drivers,phone,' . $id,
+        'email' => 'nullable|email|unique:drivers,email,' . $id,
+        'sos_phone' => 'nullable|string',
+        'option_ids' => 'required|array',
+        'option_ids.*' => 'required|exists:options,id',
+        'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        
+        // Car details
+        'photo_of_car' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'model' => 'nullable|string|max:255',
+        'production_year' => 'nullable|string|max:4',
+        'color' => 'nullable|string|max:255',
+        'plate_number' => 'nullable|string|max:255',
+        
+        // Documents
+        'driving_license_front' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'driving_license_back' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'car_license_front' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'car_license_back' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -204,7 +208,13 @@ class DriverController extends Controller
         }
 
         $driver->update($driverData);
-
+        // Sync options (removes old associations and adds new ones)
+            if ($request->has('option_ids') && is_array($request->option_ids)) {
+                $driver->options()->sync($request->option_ids);
+            } else {
+                // Clear all options if none are selected
+                $driver->options()->detach();
+            }
         return redirect()
             ->route('drivers.index')
             ->with('success', 'Driver updated successfully');

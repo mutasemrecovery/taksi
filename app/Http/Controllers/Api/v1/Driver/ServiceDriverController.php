@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\v1\Driver;
 
 use App\Http\Controllers\Controller;
 use App\Models\DriverService;
+use App\Models\Service;
 use App\Traits\Responses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -13,6 +14,29 @@ use Illuminate\Support\Facades\Validator;
 class ServiceDriverController extends Controller
 {
     use Responses;
+
+    public function index(Request $request)
+    {
+        // Get all active services
+        $services = Service::where('activate', 1)->with('servicePayments')->get();
+        
+        // Check if a driver is authenticated
+        $driver = auth('driver-api')->user();
+        
+        if ($driver) {
+            // Get the driver's service statuses
+            $driverServices = DriverService::where('driver_id', $driver->id)->pluck('status', 'service_id')->toArray();
+            
+            // Map services with their status for this driver
+            $services = $services->map(function($service) use ($driverServices) {
+                $status = isset($driverServices[$service->id]) ? $driverServices[$service->id] : 2; // Default to inactive (2) if no record
+                $service->driver_status = $status;
+                return $service;
+            });
+        }
+        
+        return $this->success_response('Services retrieved successfully', $services);
+    }
 
     public function storeOrUpdateStatus(Request $request)
     {

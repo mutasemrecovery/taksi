@@ -36,9 +36,23 @@ class Driver extends Authenticatable
         return null;
     }
     
- public function option()
-   {
-      return $this->belongsTo(Option::class);
-   }
+   public function options()
+    {
+        return $this->belongsToMany(Option::class, 'driver_options')
+            ->withTimestamps();
+    }
+
+       public function services()
+    {
+        return $this->belongsToMany(Service::class, 'driver_services')
+            ->withPivot('status')
+            ->withTimestamps();
+    }
+
+    // Add a direct relationship to driver_services
+    public function driverServices()
+    {
+        return $this->hasMany(DriverService::class);
+    }
 
 }

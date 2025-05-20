@@ -15,7 +15,7 @@ class ServicesController extends Controller
     
      public function index()
     {
-        $data = Service::get();
+        $data = Service::where('activate',1)->with('servicePayments')->get();
 
           return $this->success_response('Service retrieved successfully', $data);
     }

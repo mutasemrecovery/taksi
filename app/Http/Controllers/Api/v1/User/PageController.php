@@ -14,7 +14,7 @@ class PageController extends Controller
     {
         $data = Page::where('type',$type)->first();
 
-        return $this->success_response('Options retrieved successfully', $data);
+        return $this->success_response('Page retrieved successfully', $data);
     }
 
 

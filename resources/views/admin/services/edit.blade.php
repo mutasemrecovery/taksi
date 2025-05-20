@@ -108,15 +108,28 @@
                         </div>
                     </div>
                     
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="payment_method">{{ __('messages.Payment_Method') }} <span class="text-danger">*</span></label>
-                            <select class="form-control" id="payment_method" name="payment_method" required>
-                                <option value="1" {{ old('payment_method', $service->payment_method) == 1 ? 'selected' : '' }}>{{ __('messages.Cash') }}</option>
-                                <option value="2" {{ old('payment_method', $service->payment_method) == 2 ? 'selected' : '' }}>{{ __('messages.Visa') }}</option>
-                                <option value="3" {{ old('payment_method', $service->payment_method) == 3 ? 'selected' : '' }}>{{ __('messages.Wallet') }}</option>
-                            </select>
+                      <div class="form-group">
+                        <label>{{ __('Payment Methods') }}</label>
+                        <div class="checkbox-list">
+                            @php
+                                $paymentMethods = $service->servicePayments->pluck('payment_method')->toArray();
+                            @endphp
+                            <label class="checkbox">
+                                <input type="checkbox" name="payment_methods[]" value="1" {{ in_array(1, $paymentMethods) ? 'checked' : '' }}>
+                                <span></span>{{ __('Cash') }}
+                            </label>
+                            <label class="checkbox">
+                                <input type="checkbox" name="payment_methods[]" value="2" {{ in_array(2, $paymentMethods) ? 'checked' : '' }}>
+                                <span></span>{{ __('Visa') }}
+                            </label>
+                            <label class="checkbox">
+                                <input type="checkbox" name="payment_methods[]" value="3" {{ in_array(3, $paymentMethods) ? 'checked' : '' }}>
+                                <span></span>{{ __('Wallet') }}
+                            </label>
                         </div>
+                        @error('payment_methods')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
                        <div class="form-group">
