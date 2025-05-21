@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\WalletTransactionController;
+use App\Http\Controllers\Admin\WithdrawalRequestController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Spatie\Permission\Models\Permission;
 /*
@@ -93,6 +94,12 @@ Route::post('orders/update-status/{id}', [OrderController::class, 'updateStatus'
 Route::post('orders/update-payment-status/{id}', [OrderController::class, 'updatePaymentStatus'])->name('orders.updatePaymentStatus');
 Route::get('users/{id}/orders', [OrderController::class, 'userOrders'])->name('orders.userOrders');
 Route::get('drivers/{id}/orders', [OrderController::class, 'driverOrders'])->name('orders.driverOrders');
+
+Route::get('/withdrawals', [WithdrawalRequestController::class, 'index'])->name('withdrawals.index');
+Route::get('/history/{id}', [WithdrawalRequestController::class, 'history'])->name('admin.withdrawals.history');
+Route::post('/approve/{id}', [WithdrawalRequestController::class, 'approve'])->name('admin.withdrawals.approve');
+Route::post('/reject/{id}', [WithdrawalRequestController::class, 'reject'])->name('admin.withdrawals.reject');
+
 
 // functionloty routes
 Route::post('drivers/topUp/{id}', [DriverController::class, 'topUp'])->name('drivers.topUp');

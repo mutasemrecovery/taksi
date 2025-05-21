@@ -105,4 +105,9 @@ class Driver extends Authenticatable
         return $this->hasMany(WalletTransaction::class);
     }
 
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
+
 }

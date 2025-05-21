@@ -20,6 +20,23 @@ class AuthController extends Controller
 {
     use Responses;
 
+
+    public function updateStatusOnOff()
+    {
+        $driver = auth('driver-api')->user();
+
+        // Check if driver exists and has a valid status
+        if (!in_array($driver->status, [1, 2])) {
+            return response()->json(['message' => 'Invalid status value.'], 400);
+        }
+
+        // Toggle status
+        $driver->status = $driver->status == 1 ? 2 : 1;
+        $driver->save();
+         return $this->success_response('Status updated successfully.', $driver->status);
+     
+    }
+
     public function active()
     {
         $user = auth()->user();

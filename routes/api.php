@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\v1\Driver\ComplaintDriverController;
 use App\Http\Controllers\Api\v1\Driver\OrderDriverController;
 use App\Http\Controllers\Api\v1\Driver\RatingDriverController;
 use App\Http\Controllers\Api\v1\Driver\ServiceDriverController;
+use App\Http\Controllers\Api\v1\Driver\HomeDriverController;
+use App\Http\Controllers\Api\v1\Driver\WithdrawalRequestDriverController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\v1\User\AuthController;
@@ -50,7 +52,7 @@ Route::group(['prefix' => 'v1/user'], function () {
     Route::group(['middleware' => ['auth:user-api']], function () {
 
         Route::get('/active', [AuthController::class, 'active']);
-
+        Route::post('/withdrawal/request',  [WithdrawalRequestUserController::class, 'requestWithdrawal']);
 
         // image for chat
         Route::get('/uploadPhotoVoice', [UploadPhotoVoiceController::class, 'index']);
@@ -108,6 +110,9 @@ Route::group(['prefix' => 'v1/driver'], function () {
     Route::group(['middleware' => ['auth:driver-api']], function () {
 
         Route::get('/active', [AuthController::class, 'active']);
+        Route::post('/updateStatus', [AuthController::class, 'updateStatusOnOff']);
+        Route::post('/homeDriver', HomeDriverController::class);
+        Route::post('/withdrawal/request',  [WithdrawalRequestDriverController::class, 'requestWithdrawal']);
 
         // image for chat
         Route::get('/uploadPhotoVoice', [UploadPhotoVoiceController::class, 'index']);

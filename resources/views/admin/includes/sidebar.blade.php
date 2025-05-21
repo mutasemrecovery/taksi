@@ -111,6 +111,15 @@
                     </a>
                 </li>
                 @endcanany
+           
+                @canany(['withdrawal-table', 'withdrawal-add', 'withdrawal-edit', 'withdrawal-delete'])
+                <li class="nav-item">
+                    <a href="{{ route('withdrawals.index') }}" class="nav-link {{ request()->routeIs('withdrawals.index') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-file-alt"></i>
+                        <p>{{ __('messages.withdrawals') }}</p>
+                    </a>
+                </li>
+                @endcanany
 
                 <!-- System Settings -->
                 <li class="nav-item {{ request()->is('admin/settings*') || request()->is('admin/roles*') || request()->is('admin/employees*') ? 'menu-open' : '' }}">
