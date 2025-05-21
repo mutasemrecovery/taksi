@@ -115,7 +115,7 @@ Route::group(['prefix' => 'v1/driver'], function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/update_profile', [AuthController::class, 'updateProfile']);
         Route::post('/delete_account', [AuthController::class, 'deleteAccount']);
-        Route::get('/userProfile', [AuthController::class, 'userProfile']);
+        Route::get('/driverProfile', [AuthController::class, 'driverProfile']);
         //Notification
         Route::get('/notifications', [AuthController::class, 'notifications']);
         Route::post('/notifications', [AuthController::class, 'sendToUser']);

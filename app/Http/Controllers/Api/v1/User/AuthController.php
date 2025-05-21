@@ -271,12 +271,25 @@ class AuthController extends Controller
         try {
             // Check both authentication guards
             $userApi = auth('user-api')->user();
-            $driverApi = auth('driver-api')->user();
             
             if ($userApi) {
                 // If it's a regular user
                 return $this->success_response('User profile retrieved', $userApi);
-            } elseif ($driverApi) {
+            }else {
+                return $this->error_response('Unauthenticated', [], 401);
+            }
+        } catch (\Throwable $th) {
+            \Log::error('Profile retrieval error: ' . $th->getMessage());
+            return $this->error_response('Failed to retrieve profile', []);
+        }
+    }
+   
+    public function driverProfile()
+    {
+        try {
+            $driverApi = auth('driver-api')->user();
+            
+           if ($driverApi) {
                 $driverApi->load('options');
                 return $this->success_response('Driver profile retrieved', $driverApi);
             } else {
