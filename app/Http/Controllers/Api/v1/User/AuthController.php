@@ -399,11 +399,11 @@ class AuthController extends Controller
                 
                 // Handle all driver-specific photo uploads
                 $photoFields = [
-                    'photo_of_car' => 'assets/admin/uploads/cars',
-                    'driving_license_front' => 'assets/admin/uploads/licenses',
-                    'driving_license_back' => 'assets/admin/uploads/licenses',
-                    'car_license_front' => 'assets/admin/uploads/car_licenses',
-                    'car_license_back' => 'assets/admin/uploads/car_licenses'
+                    'photo_of_car' => 'assets/admin/uploads',
+                    'driving_license_front' => 'assets/admin/uploads',
+                    'driving_license_back' => 'assets/admin/uploads',
+                    'car_license_front' => 'assets/admin/uploads',
+                    'car_license_back' => 'assets/admin/uploads'
                 ];
                 
                 foreach ($photoFields as $field => $path) {
