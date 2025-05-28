@@ -6,4 +6,4 @@
     <!-- Default to the left -->
     <strong>Copyright &copy; 2024 <a href="">Quran</a>.</strong> All rights reserved.
   </footer>
-<?php /**PATH C:\laragon\www\uber\resources\views/admin/includes/footer.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\laragon\www\taksi\resources\views/admin/includes/footer.blade.php ENDPATH**/ ?>

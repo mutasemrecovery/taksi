@@ -5,4 +5,4 @@
   </div>
   <?php endif; ?>
 
-  <?php /**PATH C:\laragon\www\uber\resources\views/admin/includes/alerts/success.blade.php ENDPATH**/ ?>
+  <?php /**PATH C:\laragon\www\taksi\resources\views/admin/includes/alerts/success.blade.php ENDPATH**/ ?>

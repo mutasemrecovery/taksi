@@ -21,4 +21,4 @@
 
 
   </nav>
-<?php /**PATH C:\laragon\www\uber\resources\views/admin/includes/navbar.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\laragon\www\taksi\resources\views/admin/includes/navbar.blade.php ENDPATH**/ ?>

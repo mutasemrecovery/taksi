@@ -9,11 +9,142 @@ use App\Traits\Responses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use App\Services\DriverLocationService;
+use App\Services\EnhancedFCMService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Admin\FCMController as AdminFCMController;
 
 class OrderController extends Controller
 {
     use Responses;
 
+ protected $driverLocationService;
+    
+    public function __construct(DriverLocationService $driverLocationService)
+    {
+        $this->driverLocationService = $driverLocationService;
+    }
+
+   public function test_notification($orderId)
+    { 
+         $order = Order::with('user')->find($orderId);
+         $driver = auth()->user();
+         $driverId = auth()->user()->id;
+         $distance = "10";
+
+          // Customize notification content
+        $title = '🚗 طلب توصيل جديد';
+        $body = "طلب جديد على بعد {$distance} كم - اضغط للقبول";
+        
+        // Add order details to notification data
+        $orderData = [
+            'order_id' => (string)$orderId,
+            'driver_id' => (string)$driverId,
+            'distance' => (string)$distance,
+            'order_number' => $order->number ?? '',
+            'user_name' => $order->user->name ?? 'مستخدم',
+            'price' => (string)($order->price ?? 0),
+            'payment_method' => (string)$order->payment_method,
+            'screen' => 'new_order',
+            'action' => 'accept_order'
+        ];
+       
+        $success = EnhancedFCMService::sendMessageWithData(
+            $title,
+            $body,
+            $driver->fcm_token,
+            $driverId,
+            $orderData
+        );
+           return $this->successResponse('notification sent successfully', [
+                'data' => $success ,
+            ]);
+    }
+    /**
+     * Create a new order and notify nearest drivers
+     */
+    public function createOrder(Request $request)
+    {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'start_lat' => 'required|numeric',
+            'start_lng' => 'required|numeric',
+            'end_lat'   => 'required|numeric',
+            'end_lng'   => 'required|numeric',
+            'service_id'   => 'required',
+            'price' => 'nullable|numeric|min:0',
+            'payment_method' => 'nullable|integer|in:1,2', // 1 cash, 2 visa
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+       $number = Order::generateOrderNumber();
+       
+        try {
+            // Create the order
+            $order = Order::create([
+                'number' =>  $number,
+                'order_status' => 1, // Pending
+                'price' => $request->price ?? null,
+                'payment_method' => $request->payment_method ?? 1,
+                'payment_type' => 2, // Unpaid by default
+                'user_id' => auth()->user()->id,
+            ]);
+            
+            // Find and notify nearest drivers
+            $result = $this->driverLocationService->findAndNotifyNearestDrivers(
+                $request->lat,
+                $request->lng,
+                $order->id,
+                $request->radius ?? 10 // Default 10km radius
+            );
+            
+            if ($result['success']) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Order created and drivers notified successfully',
+                    'data' => [
+                        'order' => $order,
+                        'drivers_notified' => $result['drivers_found'],
+                        'notifications_sent' => $result['notifications_sent'],
+                        'notifications_failed' => $result['notifications_failed'],
+                        'user_location' => [
+                            'lat' => $request->lat,
+                            'lng' => $request->lng
+                        ]
+                    ]
+                ], 201);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => $result['message'],
+                    'data' => [
+                        'order' => $order,
+                        'user_location' => [
+                            'lat' => $request->lat,
+                            'lng' => $request->lng
+                        ]
+                    ]
+                ], 200);
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('Error creating order: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => false,
+                'message' => 'Error creating order: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
     /**
      * Display a listing of the user's orders
      *

@@ -11,7 +11,18 @@ class Service extends Model
     use HasFactory;
 
      protected $guarded=[];
-     
+    protected $appends = ['name'];
+
+    /**
+     * Dynamic 'name' attribute based on current locale.
+     *
+     * @return string
+     */
+    public function getNameAttribute()
+    {
+        $locale = App::getLocale();
+        return $locale === 'ar' ? $this->name_ar : $this->name_en;
+    }
     public function getName()
     {
         $locale = App::getLocale();

@@ -35,6 +35,15 @@ class Order extends Model
         return $this->belongsTo(Service::class);
     }
 
+    public static function generateOrderNumber()
+    {
+        do {
+            $number = 'ORD-' . date('Ymd') . '-' . strtoupper(uniqid());
+        } while (self::where('number', $number)->exists());
+
+        return $number;
+    }
+
     /**
      * Get the order status text.
      *

@@ -10,4 +10,4 @@
 
     </div>
 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-<?php /**PATH C:\laragon\www\uber\resources\views/admin/includes/alerts/error.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\laragon\www\taksi\resources\views/admin/includes/alerts/error.blade.php ENDPATH**/ ?>

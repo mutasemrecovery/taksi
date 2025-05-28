@@ -13,12 +13,60 @@ class ServicesController extends Controller
 { 
     use Responses;
     
-     public function index()
+  public function index(Request $request)
     {
-        $data = Service::where('activate',1)->with('servicePayments')->get();
+        // Validate coordinates from the request
+        $request->validate([
+            'start_lat' => 'required|numeric',
+            'start_lng' => 'required|numeric',
+            'end_lat'   => 'required|numeric',
+            'end_lng'   => 'required|numeric',
+        ]);
 
-          return $this->success_response('Service retrieved successfully', $data);
+        $startLat = $request->start_lat;
+        $startLng = $request->start_lng;
+        $endLat   = $request->end_lat;
+        $endLng   = $request->end_lng;
+
+        $distance = $this->calculateDistance($startLat, $startLng, $endLat, $endLng); // in KM
+
+        $services = Service::where('activate', 1)->with('servicePayments')->get();
+
+        $data = $services->map(function ($service) use ($distance) {
+            $price = $service->start_price + ($service->price_per_km * $distance);
+
+            // Clone service data and add dynamic fields
+            $serviceData = $service->toArray();
+            $serviceData['distance_km'] = round($distance, 2);
+            $serviceData['estimated_price'] = round($price, 2);
+
+            return $serviceData;
+        });
+
+        return $this->success_response('Services retrieved with full data and estimated prices', $data);
     }
+
+
+
+    private function calculateDistance($lat1, $lng1, $lat2, $lng2)
+    {
+        $earthRadius = 6371; // Radius in kilometers
+
+        $lat1 = deg2rad($lat1);
+        $lng1 = deg2rad($lng1);
+        $lat2 = deg2rad($lat2);
+        $lng2 = deg2rad($lng2);
+
+        $latDelta = $lat2 - $lat1;
+        $lngDelta = $lng2 - $lng1;
+
+        $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
+            cos($lat1) * cos($lat2) * pow(sin($lngDelta / 2), 2)));
+
+        return $earthRadius * $angle;
+    }
+
+
 
 
 }

@@ -173,4 +173,4 @@
             </ul>
         </nav>
     </div>
-</aside><?php /**PATH C:\laragon\www\uber\resources\views/admin/includes/sidebar.blade.php ENDPATH**/ ?>
+</aside><?php /**PATH C:\laragon\www\taksi\resources\views/admin/includes/sidebar.blade.php ENDPATH**/ ?>

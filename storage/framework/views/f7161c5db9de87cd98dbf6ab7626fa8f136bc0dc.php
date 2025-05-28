@@ -1,10 +1,9 @@
-@extends('layouts.admin')
-@section('title')
+<?php $__env->startSection('title'); ?>
 notifications
-@endsection
+<?php $__env->stopSection(); ?>
 
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 
       <div class="card">
         <div class="card-header">
@@ -18,26 +17,26 @@ notifications
     <div class="col-6">
         <div class="card">
             <div class="card-body">
-                <form action="{{route('notifications.send')}}" method="post">
-                    @csrf
+                <form action="<?php echo e(route('notifications.send')); ?>" method="post">
+                    <?php echo csrf_field(); ?>
                     <div class="form-group mt-0">
                         <label for="title">Title</label>
-                        <input type="text" class="form-control @if($errors->has('title')) is-invalid @endif" id="title" name="title" value="{{old('title')}}">
-                        @if($errors->has('title'))
+                        <input type="text" class="form-control <?php if($errors->has('title')): ?> is-invalid <?php endif; ?>" id="title" name="title" value="<?php echo e(old('title')); ?>">
+                        <?php if($errors->has('title')): ?>
                             <span class="invalid-feedback" role="alert">
-                                <strong>{{ $errors->first('title') }}</strong>
+                                <strong><?php echo e($errors->first('title')); ?></strong>
                             </span>
-                        @endif
+                        <?php endif; ?>
                     </div>
 
                     <div class="form-group">
                         <label for="body">Body</label>
-                        <textarea name="body" id="body" class="form-control @if($errors->has('body')) is-invalid @endif">{{old('body')}}</textarea>
-                        @if($errors->has('body'))
+                        <textarea name="body" id="body" class="form-control <?php if($errors->has('body')): ?> is-invalid <?php endif; ?>"><?php echo e(old('body')); ?></textarea>
+                        <?php if($errors->has('body')): ?>
                             <span class="invalid-feedback" role="alert">
-                                <strong>{{ $errors->first('body') }}</strong>
+                                <strong><?php echo e($errors->first('body')); ?></strong>
                             </span>
-                        @endif
+                        <?php endif; ?>
                     </div>
 
                     <div class="form-group">
@@ -48,11 +47,11 @@ notifications
                             <option value="2">Only Drivers</option>
                         </select>
 
-                        @if($errors->has('type'))
+                        <?php if($errors->has('type')): ?>
                             <span class="invalid-feedback" role="alert">
-                                <strong>{{ $errors->first('type') }}</strong>
+                                <strong><?php echo e($errors->first('type')); ?></strong>
                             </span>
-                        @endif
+                        <?php endif; ?>
                     </div>
 
                     <div class="text-right mt-3">
@@ -80,7 +79,7 @@ notifications
 
 
 
-@endsection
+<?php $__env->stopSection(); ?>
 
 
 
@@ -88,3 +87,5 @@ notifications
 
 
 
+
+<?php echo $__env->make('layouts.admin', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\taksi\resources\views/admin/notifications/create.blade.php ENDPATH**/ ?>
