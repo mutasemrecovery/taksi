@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Helpers\AppSetting;
+use App\Models\Driver;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -22,7 +23,7 @@ class FCMController extends BaseController
             return false;
         }
 
-        $credentialsFilePath = base_path('json/noor-9754e-4241cd69821b.json');
+        $credentialsFilePath = base_path('json/taxiu-app-faf54eac2bf6.json');
 
         try {
             $client = new GoogleClient();
@@ -60,7 +61,7 @@ class FCMController extends BaseController
             $payload = json_encode($data);
 
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/v1/projects/noor-9754e/messages:send');
+            curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/v1/projects/taxiu-app/messages:send');
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -95,42 +96,50 @@ class FCMController extends BaseController
         }
     }
 
-   public static function sendMessageToAll($title, $body, $type = 0, $userId = null): bool
+   public static function sendMessageToAll($title, $body, $type = 0): bool
     {
-        $query = User::query();
-    
-        // Filter based on type
-        if ($type == 1) { // Regular Users
-            $query->where('user_type', 1);
-        } elseif ($type == 2) { // Parents
-            $query->where('user_type', 3);
-        } elseif ($type == 3) { // Teachers
-            $query->where('user_type', 2);
-        } elseif ($type == 4 && $userId) { // Specific User
-            $query->where('id', $userId);
+        $users = collect();
+
+        if ($type == 0 || $type == 1) {
+            // Fetch all users (or only users if type == 1)
+            $userQuery = User::query()->whereNotNull('fcm_token');
+
+            if ($type == 1) {
+                // Add any specific filtering for "users" if needed
+                // e.g., $userQuery->where('user_type', 1);
+            }
+
+            $users = $users->merge($userQuery->get());
         }
-    
-        // Get the users based on the conditions
-        $users = $query->whereNotNull('fcm_token')->get();
-    
+
+        if ($type == 0 || $type == 2) {
+            // Fetch all drivers
+            $driverQuery = Driver::query()->whereNotNull('fcm_token');
+            $users = $users->merge($driverQuery->get());
+        }
+
         if ($users->isEmpty()) {
-            \Log::warning("No users found for FCM notification with type: $type");
+            \Log::warning("No recipients found for FCM notification with type: $type");
             return false;
         }
-    
+
         $allSent = true;
-    
-        foreach ($users as $user) {
-            $sent = self::sendMessage($title, $body, $user->fcm_token, $user->id);
-    
+
+        foreach ($users as $recipient) {
+            $fcmToken = $recipient->fcm_token ?? null;
+            $userId = $recipient->id;
+
+            $sent = self::sendMessage($title, $body, $fcmToken, $userId);
+
             if (!$sent) {
                 $allSent = false;
-                \Log::error("FCM notification failed for user ID " . $user->id);
+                \Log::error("FCM notification failed for recipient ID $userId");
             }
         }
-    
+
         return $allSent;
     }
+
 
     
     public static function sendMessageToUser($title, $body, $user_id): bool

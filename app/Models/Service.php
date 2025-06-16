@@ -11,7 +11,27 @@ class Service extends Model
     use HasFactory;
 
      protected $guarded=[];
-     
+    protected $appends = ['name','photo_url'];
+
+  
+    
+    // Add a custom accessor for the photo URL
+    public function getPhotoUrlAttribute()
+    {
+        if ($this->photo) {
+            // Use the APP_URL from the .env file
+            $baseUrl = rtrim(config('app.url'), '/');
+            return $baseUrl . '/assets/admin/uploads/' . $this->photo;
+        }
+        
+        return null;
+    }
+    
+    public function getNameAttribute()
+    {
+        $locale = App::getLocale();
+        return $locale === 'ar' ? $this->name_ar : $this->name_en;
+    }
     public function getName()
     {
         $locale = App::getLocale();
@@ -35,6 +55,8 @@ class Service extends Model
     {
         return $this->hasMany(DriverService::class);
     }
+    
+    
     
     /**
      * Get the type of commission text.

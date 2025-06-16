@@ -80,14 +80,7 @@
                                     <th>{{ __('messages.Referral_Code') }}</th>
                                     <td>{{ $user->referral_code ?? __('messages.Not_Available') }}</td>
                                 </tr>
-                                <tr>
-                                    <th>{{ __('messages.FCM_Token') }}</th>
-                                    <td>
-                                        <div style="max-width: 100%; overflow-x: auto;">
-                                            <small>{{ $user->fcm_token ?? __('messages.Not_Available') }}</small>
-                                        </div>
-                                    </td>
-                                </tr>
+                             
                                 <tr>
                                     <th>{{ __('messages.Status') }}</th>
                                     <td>

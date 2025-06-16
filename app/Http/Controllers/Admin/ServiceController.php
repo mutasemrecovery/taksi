@@ -51,6 +51,7 @@ class ServiceController extends Controller
             'admin_commision' => 'required|numeric|min:0',
             'activate' => 'required',
             'type_of_commision' => 'required|in:1,2',
+            'is_electric' => 'required|in:1,2',
             'payment_methods' => 'required|array', // Changed to array
             'payment_methods.*' => 'required|in:1,2,3', // Validate each payment method
             'capacity' => 'required|integer|min:0',
@@ -125,6 +126,7 @@ class ServiceController extends Controller
             'price_per_km' => 'required|numeric|min:0',
             'admin_commision' => 'required|numeric|min:0',
             'type_of_commision' => 'required|in:1,2',
+            'is_electric' => 'required|in:1,2',
             'payment_methods' => 'required|array', // Changed to array
             'payment_methods.*' => 'required|in:1,2,3', // Validate each payment method
             'capacity' => 'required|integer|min:0',

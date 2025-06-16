@@ -100,6 +100,13 @@
                                 <option value="2" {{ old('type_of_commision') == 2 ? 'selected' : '' }}>{{ __('messages.Percentage') }}</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label for="type_of_commision">{{ __('messages.is_electric') }} <span class="text-danger">*</span></label>
+                            <select class="form-control" id="is_electric" name="is_electric" required>
+                                <option value="1" {{ old('is_electric', 1) == 1 ? 'selected' : '' }}>{{ __('messages.Yes') }}</option>
+                                <option value="2" {{ old('is_electric') == 2 ? 'selected' : '' }}>{{ __('messages.No') }}</option>
+                            </select>
+                        </div>
                     </div>
                     
                     <div class="form-group">

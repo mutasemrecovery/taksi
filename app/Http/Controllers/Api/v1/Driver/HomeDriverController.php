@@ -15,22 +15,30 @@ class HomeDriverController extends Controller
 {
     use Responses;
 
-   public function __invoke(Request $request)
+    public function __invoke(Request $request)
     {
         // Get the authenticated driver
         $driver = auth('driver-api')->user();
-        
+
         // Get driver's rating
         $rating = $driver->ratings()->avg('rating') ?? 0;
-        
+
+        // Get only active services
+        $activeServices = $driver->activeServices()->get();
+
+        // Get driver's options
+        $driverOptions = $driver->options()->get();
+
         // Prepare the response data
         $responseData = [
-            'profile' => [
-                $driver
-            ],
+            'profile' => $driver,
             'rating' => round($rating, 1), // Round to 1 decimal place
+            'active_services' => $activeServices,
+            'options' => $driverOptions,
         ];
-        
+
         return $this->success_response('Home data retrieved successfully', $responseData);
     }
+
+
 }

@@ -93,6 +93,16 @@
                 @endcanany
 
                 <!-- Notifications -->
+                @canany(['order-table', 'order-add', 'order-edit', 'order-delete'])
+                <li class="nav-item">
+                    <a href="{{ route('orders.index') }}" class="nav-link {{ request()->routeIs('orders.index') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-car"></i>
+                        <p>{{ __('messages.orders') }}</p>
+                    </a>
+                </li>
+                @endcanany
+            
+                <!-- Notifications -->
                 @canany(['notification-table', 'notification-add', 'notification-edit', 'notification-delete'])
                 <li class="nav-item">
                     <a href="{{ route('notifications.create') }}" class="nav-link {{ request()->routeIs('notifications.create') ? 'active' : '' }}">
@@ -112,12 +122,40 @@
                 </li>
                 @endcanany
            
-                @canany(['withdrawal-table', 'withdrawal-add', 'withdrawal-edit', 'withdrawal-delete'])
-                <li class="nav-item">
-                    <a href="{{ route('withdrawals.index') }}" class="nav-link {{ request()->routeIs('withdrawals.index') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-file-alt"></i>
-                        <p>{{ __('messages.withdrawals') }}</p>
+            
+
+                   @canany(['wallet-table', 'wallet-add', 'wallet-edit', 'wallet-delete', 'withdrawal-table', 'withdrawal-add', 'withdrawal-edit', 'withdrawal-delete'])
+                <li class="nav-item {{ request()->is('admin/users*') || request()->is('admin/drivers*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-users"></i>
+                        <p>
+                            {{ __('messages.wallet_management') }}
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
                     </a>
+                    <ul class="nav nav-treeview">
+
+
+                        @canany(['wallet-table', 'wallet-add', 'wallet-edit', 'wallet-delete'])
+                        <li class="nav-item">
+                            <a href="{{ route('wallet_transactions.index') }}" class="nav-link {{ request()->routeIs('wallet_transactions.index') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-money-bill-wave"></i>
+                                <p>{{ __('messages.wallets') }}</p>
+                            </a>
+                        </li>
+                        @endcanany
+                        
+                        @canany(['withdrawal-table', 'withdrawal-add', 'withdrawal-edit', 'withdrawal-delete'])
+                            <li class="nav-item">
+                                <a href="{{ route('withdrawals.index') }}" class="nav-link {{ request()->routeIs('withdrawals.index') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-file-alt"></i>
+                                    <p>{{ __('messages.withdrawals') }}</p>
+                                </a>
+                            </li>
+                        @endcanany
+
+
+                    </ul>
                 </li>
                 @endcanany
 

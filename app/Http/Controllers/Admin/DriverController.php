@@ -152,7 +152,6 @@ class DriverController extends Controller
 
         $validator = Validator::make($request->all(), [
         'name' => 'required|string|max:255',
-        'country_code' => 'required',
         'phone' => 'required|string|unique:drivers,phone,' . $id,
         'email' => 'nullable|email|unique:drivers,email,' . $id,
         'sos_phone' => 'nullable|string',
@@ -184,7 +183,7 @@ class DriverController extends Controller
         $driverData = $request->except([
             'photo', 'photo_of_car', 'driving_license_front', 
             'driving_license_back', 'car_license_front', 'car_license_back',
-            'password'
+            'password', 'option_ids'
         ]);
 
         // Handle password

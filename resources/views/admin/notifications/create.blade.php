@@ -42,11 +42,12 @@ notifications
 
                     <div class="form-group">
                         <label for="type">Notification Type</label>
-                        <select name="type" id="type" class="form-control @if($errors->has('type')) is-invalid @endif" onchange="toggleUserField()">
-                            <option value="0">All Users</option>
-                            <option value="1">Users</option>
-                            <option value="2">Drivers</option>
+                       <select name="type" id="type" class="form-control">
+                            <option value="0">All Users and Drivers</option>
+                            <option value="1">Only Users</option>
+                            <option value="2">Only Drivers</option>
                         </select>
+
                         @if($errors->has('type'))
                             <span class="invalid-feedback" role="alert">
                                 <strong>{{ $errors->first('type') }}</strong>

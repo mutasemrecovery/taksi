@@ -7,20 +7,15 @@ use App\Http\Controllers\Api\v1\Driver\OrderDriverController;
 use App\Http\Controllers\Api\v1\Driver\RatingDriverController;
 use App\Http\Controllers\Api\v1\Driver\ServiceDriverController;
 use App\Http\Controllers\Api\v1\Driver\HomeDriverController;
+use App\Http\Controllers\Api\v1\Driver\WalletDriverController;
 use App\Http\Controllers\Api\v1\Driver\WithdrawalRequestDriverController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\v1\User\AuthController;
-use App\Http\Controllers\Api\v1\User\ParentStudentController;
-use App\Http\Controllers\Api\v1\User\AttendanceController;
-use App\Http\Controllers\Api\v1\User\ExamController;
-use App\Http\Controllers\Api\v1\User\GradeController;
-use App\Http\Controllers\Api\v1\User\ClasController;
-use App\Http\Controllers\Api\v1\User\NoteStudentController;
-use App\Http\Controllers\Api\v1\User\StudentController;
 use App\Http\Controllers\Api\v1\User\UserAddressController;
 use App\Http\Controllers\Api\v1\User\UploadPhotoVoiceController;
-use App\Http\Controllers\Api\v1\User\TeacherController;
+use App\Models\Notification;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -45,7 +40,7 @@ Route::group(['prefix' => 'v1/user'], function () {
     Route::post('/register', [AuthController::class, 'register']);
 
     Route::get('/settings', [SettingController::class, 'index']);
-    Route::get('/services', [ServicesController::class, 'index']);
+    Route::post('/services', [ServicesController::class, 'index']);
     Route::get('/pages/{type}', [PageController::class, 'index']);
 
     // Auth Route
@@ -58,14 +53,14 @@ Route::group(['prefix' => 'v1/user'], function () {
         Route::get('/uploadPhotoVoice', [UploadPhotoVoiceController::class, 'index']);
         Route::post('/uploadPhotoVoice', [UploadPhotoVoiceController::class, 'store']);
 
-        Route::post('/update_profile', [AuthController::class, 'updateProfile']);
+        Route::post('/update_profile', [AuthController::class, 'updateUserProfile']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/delete_account', [AuthController::class, 'deleteAccount']);
         Route::get('/userProfile', [AuthController::class, 'userProfile']);
 
         //Notification
-        Route::get('/notifications', [AuthController::class, 'notifications']);
-        Route::post('/notifications', [AuthController::class, 'sendToUser']);
+        Route::get('/notifications', [NotificationApiController::class, 'getUserNotifications']);
+        Route::post('/notifications', [NotificationApiController::class, 'sendToUser']);
 
         Route::post('/ratings', [RatingController::class, 'store']);
 
@@ -83,6 +78,8 @@ Route::group(['prefix' => 'v1/user'], function () {
         Route::put('/complaints/{id}', [ComplaintController::class, 'update']);
         Route::delete('/complaints/{id}', [ComplaintController::class, 'destroy']);
 
+
+        Route::post('/create_order', [OrderController::class, 'createOrder']);
         Route::get('/orders', [OrderController::class, 'index']);
         Route::get('/orders/active', [OrderController::class, 'activeOrders']);
         Route::get('/orders/completed', [OrderController::class, 'completedOrders']);
@@ -118,11 +115,11 @@ Route::group(['prefix' => 'v1/driver'], function () {
         Route::get('/uploadPhotoVoice', [UploadPhotoVoiceController::class, 'index']);
         Route::post('/uploadPhotoVoice', [UploadPhotoVoiceController::class, 'store']);
         Route::post('/logout', [AuthController::class, 'logout']);
-        Route::post('/update_profile', [AuthController::class, 'updateProfile']);
+        Route::post('/update_profile', [AuthController::class, 'updateDriverProfile']);
         Route::post('/delete_account', [AuthController::class, 'deleteAccount']);
         Route::get('/driverProfile', [AuthController::class, 'driverProfile']);
         //Notification
-        Route::get('/notifications', [AuthController::class, 'notifications']);
+        Route::get('/notifications', [NotificationApiController::class, 'getDriverNotifications']);
         Route::post('/notifications', [AuthController::class, 'sendToUser']);
 
         Route::get('/ratings', [RatingDriverController::class, 'index']);

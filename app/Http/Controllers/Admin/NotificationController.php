@@ -23,8 +23,7 @@ class NotificationController extends Controller
         $this->validate($request, [
             'title' => 'required',
             'body' => 'required',
-            'type' => 'required|in:0,1,2,3,4', // Ensure valid type
-            'user_id' => 'nullable|required_if:type,4|exists:users,id', // If type = 4, user_id must be valid
+            'type' => 'required|in:0,1,2', // Ensure valid type
         ]);
     
         // Send notification via Firebase Cloud Messaging (FCM)
@@ -35,7 +34,6 @@ class NotificationController extends Controller
             'title' => $request->title,
             'body' => $request->body,
             'type' => $request->type,
-            'user_id' => $request->type == 4 ? $request->user_id : null, // Only store user_id if type = 4
         ]);
     
         $noti->save();

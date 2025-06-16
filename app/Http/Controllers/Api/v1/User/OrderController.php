@@ -6,14 +6,220 @@ use App\Models\Order;
 use App\Models\Service;
 use App\Models\User;
 use App\Traits\Responses;
+use App\Models\ServicePayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use App\Services\DriverLocationService;
+use App\Services\EnhancedFCMService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Admin\FCMController as AdminFCMController;
 
 class OrderController extends Controller
 {
     use Responses;
 
+ protected $driverLocationService;
+    
+    public function __construct(DriverLocationService $driverLocationService)
+    {
+        $this->driverLocationService = $driverLocationService;
+    }
+
+   public function test_notification($orderId)
+    { 
+         $order = Order::with('user')->find($orderId);
+         $driver = auth()->user();
+         $driverId = auth()->user()->id;
+         $distance = "10";
+
+          // Customize notification content
+        $title = '🚗 طلب توصيل جديد';
+        $body = "طلب جديد على بعد {$distance} كم - اضغط للقبول";
+        
+        // Add order details to notification data
+        $orderData = [
+            'order_id' => (string)$orderId,
+            'driver_id' => (string)$driverId,
+            'distance' => (string)$distance,
+            'order_number' => $order->number ?? '',
+            'user_name' => $order->user->name ?? 'مستخدم',
+            'price' => (string)($order->price ?? 0),
+            'payment_method' => (string)$order->payment_method,
+            'screen' => 'new_order',
+            'action' => 'accept_order'
+        ];
+       
+        $success = EnhancedFCMService::sendMessageWithData(
+            $title,
+            $body,
+            $driver->fcm_token,
+            $driverId,
+            $orderData
+        );
+           return $this->successResponse('notification sent successfully', [
+                'data' => $success ,
+            ]);
+    }
+    /**
+     * Create a new order and notify nearest drivers
+     */
+  public function createOrder(Request $request)
+{
+    // Validate the request
+    $validator = Validator::make($request->all(), [
+        'pick_name' => 'required',
+        'drop_name' => 'nullable',
+        'start_lat' => 'required|numeric',
+        'start_lng' => 'required|numeric',
+        'end_lat'   => 'nullable|numeric',
+        'end_lng'   => 'nullable|numeric',
+        'service_id' => 'required|exists:services,id',
+        'total_price_before_discount' => 'nullable|numeric|min:0',
+        'payment_method' => 'nullable|integer|in:1,2,3', // 1 cash, 2 visa // 3 wallet
+    ]);
+    
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed',
+            'errors' => $validator->errors()
+        ], 422);
+    }
+    
+    try {
+        // Validate service exists and is active
+        $service = Service::where('id', $request->service_id)
+                         ->where('activate', 1)
+                         ->first();
+                         
+        if (!$service) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Service not found or inactive'
+            ], 404);
+        }
+        
+        // Validate payment method is supported for this service
+        $paymentMethod = $request->payment_method ?? 1;
+        $isPaymentSupported = ServicePayment::where('service_id', $request->service_id)
+                                          ->where('payment_method', $paymentMethod)
+                                          ->exists();
+                                          
+        if (!$isPaymentSupported) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment method not supported for this service'
+            ], 400);
+        }
+        
+        $number = Order::generateOrderNumber();
+        
+        // Calculate price if not provided
+        $calculatedPrice = $request->total_price_before_discount;
+        if (!$calculatedPrice) {
+            $distance = $this->calculateDistance(
+                $request->start_lat, 
+                $request->start_lng, 
+                $request->end_lat, 
+                $request->end_lng
+            );
+            $calculatedPrice = $service->start_price + ($distance * $service->price_per_km);
+        }
+        
+        // Create the order
+        $order = Order::create([
+            'number' => $number,
+            'status' => 1, // Pending
+            'total_price_before_discount' => $calculatedPrice,
+             'total_price_after_discount' => $calculatedPrice, 
+             'net_price_for_driver' => $calculatedPrice, 
+             'commision_of_admin'=> 1, 
+             
+            'payment_method' => $paymentMethod,
+            'status_payment' => 2, // Unpaid by default
+            'user_id' => auth()->user()->id,
+            'service_id' => $request->service_id,
+            'pick_lat' => $request->start_lat,
+            'pick_lng' => $request->start_lng,
+            'pick_name' => $request->pick_name,
+            'drop_name' => $request->drop_name,
+            'drop_lat' => $request->end_lat,
+            'drop_lng' => $request->end_lng,
+        ]);
+        
+        // Find and notify nearest drivers for this specific service
+        $result = $this->driverLocationService->findAndNotifyNearestDrivers(
+            $request->start_lat,
+            $request->start_lng,
+            $order->id,
+            $request->service_id, // Pass service_id
+            $request->radius ?? 10000 // Default 10km radius
+        );
+        
+        if ($result['success']) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Order created and drivers notified successfully',
+                'data' => [
+                    'order' => $order->load('service'), // Load service relationship
+                    'service' => $service,
+                    'drivers_notified' => $result['drivers_found'],
+                    'notifications_sent' => $result['notifications_sent'],
+                    'notifications_failed' => $result['notifications_failed'],
+                    'user_location' => [
+                        'start_lat' => $request->start_lat,
+                        'start_lng' => $request->start_lng,
+                        'end_lat' => $request->end_lat,
+                        'end_lng' => $request->end_lng
+                    ]
+                ]
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => $result['message'],
+                'data' => [
+                    'order' => $order->load('service'),
+                    'service' => $service,
+                    'user_location' => [
+                        'start_lat' => $request->start_lat,
+                        'start_lng' => $request->start_lng,
+                        'end_lat' => $request->end_lat,
+                        'end_lng' => $request->end_lng
+                    ]
+                ]
+            ], 200);
+        }
+        
+    } catch (\Exception $e) {
+        \Log::error('Error creating order: ' . $e->getMessage());
+        
+        return response()->json([
+            'status' => false,
+            'message' => 'Error creating order: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+private function calculateDistance($lat1, $lng1, $lat2, $lng2)
+{
+    $earthRadius = 6371; // Earth's radius in kilometers
+    
+    $dLat = deg2rad($lat2 - $lat1);
+    $dLng = deg2rad($lng2 - $lng1);
+    
+    $a = sin($dLat/2) * sin($dLat/2) + 
+         cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * 
+         sin($dLng/2) * sin($dLng/2);
+    
+    $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+    $distance = $earthRadius * $c;
+    
+    return $distance;
+}
+    
     /**
      * Display a listing of the user's orders
      *
@@ -22,7 +228,7 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
+        $user = auth()->user();
         
         $validator = Validator::make($request->all(), [
             'status' => 'sometimes|in:1,2,3,4,5,6,7',
@@ -41,29 +247,29 @@ class OrderController extends Controller
         
         $query = Order::where('user_id', $user->id);
         
-        // Filter by status if provided
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
+        // // Filter by status if provided
+        // if ($request->has('status')) {
+        //     $query->where('status', $request->status);
+        // }
         
-        // Filter by payment status if provided
-        if ($request->has('payment_status')) {
-            $query->where('status_payment', $request->payment_status);
-        }
+        // // Filter by payment status if provided
+        // if ($request->has('payment_status')) {
+        //     $query->where('status_payment', $request->payment_status);
+        // }
         
-        // Filter by payment method if provided
-        if ($request->has('payment_method')) {
-            $query->where('payment_method', $request->payment_method);
-        }
+        // // Filter by payment method if provided
+        // if ($request->has('payment_method')) {
+        //     $query->where('payment_method', $request->payment_method);
+        // }
         
-        // Filter by date range if provided
-        if ($request->has('from_date')) {
-            $query->whereDate('created_at', '>=', $request->from_date);
-        }
+        // // Filter by date range if provided
+        // if ($request->has('from_date')) {
+        //     $query->whereDate('created_at', '>=', $request->from_date);
+        // }
         
-        if ($request->has('to_date')) {
-            $query->whereDate('created_at', '<=', $request->to_date);
-        }
+        // if ($request->has('to_date')) {
+        //     $query->whereDate('created_at', '<=', $request->to_date);
+        // }
         
         // Apply sorting
         $sortBy = $request->sort_by ?? 'created_at';
@@ -79,7 +285,7 @@ class OrderController extends Controller
         
         // Pagination
         $perPage = $request->per_page ?? 15;
-        $orders = $query->with(['driver:id,name,phone,photo', 'service:id,name'])->paginate($perPage);
+        $orders = $query->with(['driver:id,name,phone,photo', 'service:id,name_en'])->paginate($perPage);
         
         // Transform data to include status text and other helper methods
         $orders->getCollection()->transform(function ($order) {

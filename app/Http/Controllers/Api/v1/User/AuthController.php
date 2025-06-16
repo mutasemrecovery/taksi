@@ -180,20 +180,21 @@ class AuthController extends Controller
                 'sos_phone' => 'nullable|string',
                 'option_ids' => 'required|array', // Changed to array
                 'option_ids.*' => 'required|exists:options,id', // Validate each option ID
-                'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'photo' => 'nullable|image|mimes:jpeg,png,jpg',
                 
                 // Car details
-                'photo_of_car' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'passenger_number' => 'nullable',
+                'photo_of_car' => 'nullable|image|mimes:jpeg,png,jpg',
                 'model' => 'nullable|string|max:255',
                 'production_year' => 'nullable|string|max:4',
                 'color' => 'nullable|string|max:255',
                 'plate_number' => 'nullable|string|max:255',
                 
                 // Documents
-                'driving_license_front' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'driving_license_back' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'car_license_front' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'car_license_back' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'driving_license_front' => 'nullable|image|mimes:jpeg,png,jpg',
+                'driving_license_back' => 'nullable|image|mimes:jpeg,png,jpg',
+                'car_license_front' => 'nullable|image|mimes:jpeg,png,jpg',
+                'car_license_back' => 'nullable|image|mimes:jpeg,png,jpg',
             ]);
         } else {
             $validator = Validator::make($request->all(), [
@@ -202,7 +203,7 @@ class AuthController extends Controller
                 'phone' => 'required|string|unique:users',
                 'email' => 'nullable|email|unique:users',
                 'fcm_token' => 'nullable|string',
-                'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'photo' => 'nullable|image|mimes:jpeg,png,jpg',
             ]);
         }
         
@@ -237,6 +238,7 @@ class AuthController extends Controller
             }
             
             // Add car details
+            $userData['passenger_number'] = $request->passenger_number;
             $userData['model'] = $request->model;
             $userData['production_year'] = $request->production_year;
             $userData['color'] = $request->color;
@@ -318,125 +320,124 @@ class AuthController extends Controller
         }
     }
 
-        public function updateProfile(Request $request)
+     public function updateUserProfile(Request $request)
     {
         try {
-            // Check both authentication guards
-            $userApi = auth('user-api')->user();
-            $driverApi = auth('driver-api')->user();
-            
-            // Determine which type of user is authenticated
-            if ($userApi) {
-                $user = $userApi;
-                $userType = 'user';
-                $table = 'users';
-            } elseif ($driverApi) {
-                $user = $driverApi;
-                $userType = 'driver';
-                $table = 'drivers';
-            } else {
+            $user = auth('user-api')->user();
+
+            if (!$user) {
                 return $this->error_response('Unauthenticated', [], 401);
             }
-            
-            // Base validation rules for both user types
+
             $validationRules = [
                 'name' => 'nullable|string|max:255',
-                'email' => 'nullable|email|unique:' . $table . ',email,' . $user->id,
+                'email' => 'nullable|email|unique:users,email,' . $user->id,
                 'phone' => 'nullable|string',
                 'sos_phone' => 'nullable|string',
                 'country_code' => 'nullable|string',
-                'photo' => 'nullable|image|max:2048',
+                'photo' => 'nullable|image',
             ];
-            
-            // Add driver-specific validation rules if the user is a driver
-            if ($userType == 'driver') {
-                $driverRules = [
-                    'photo_of_car' => 'nullable|image|max:2048',
-                    'model' => 'nullable|string|max:255',
-                    'production_year' => 'nullable|string|max:4',
-                    'color' => 'nullable|string|max:255',
-                    'plate_number' => 'nullable|string|max:255',
-                    'driving_license_front' => 'nullable|image|max:2048',
-                    'driving_license_back' => 'nullable|image|max:2048',
-                    'car_license_front' => 'nullable|image|max:2048',
-                    'car_license_back' => 'nullable|image|max:2048',
-                    'option_ids' => 'nullable|array', // Add validation for option_ids array
-                    'option_ids.*' => 'nullable|exists:options,id' // Validate each option ID
-                ];
-                
-                // Merge driver-specific rules with base rules
-                $validationRules = array_merge($validationRules, $driverRules);
-            }
-            
-            // Validate input data
+
             $validator = Validator::make($request->all(), $validationRules);
-            
             if ($validator->fails()) {
                 return $this->error_response('Validation error', $validator->errors());
             }
-            
-            // Get basic fields for both user types
+
             $data = $request->only(['name', 'email', 'phone', 'sos_phone', 'country_code']);
-            
-            // Handle basic profile photo upload (for both user types)
+
             if ($request->hasFile('photo')) {
-                // Delete old photo if exists
                 if ($user->photo && file_exists('assets/admin/uploads/' . $user->photo)) {
                     unlink('assets/admin/uploads/' . $user->photo);
                 }
                 $data['photo'] = uploadImage('assets/admin/uploads', $request->file('photo'));
             }
-            
-            // Handle driver-specific fields and photos if the user is a driver
-            if ($userType == 'driver') {
-                // Add text fields
-                $data = array_merge($data, $request->only([
-                    'model',
-                    'production_year',
-                    'color',
-                    'plate_number'
-                ]));
-                
-                // Handle all driver-specific photo uploads
-                $photoFields = [
-                    'photo_of_car' => 'assets/admin/uploads',
-                    'driving_license_front' => 'assets/admin/uploads',
-                    'driving_license_back' => 'assets/admin/uploads',
-                    'car_license_front' => 'assets/admin/uploads',
-                    'car_license_back' => 'assets/admin/uploads'
-                ];
-                
-                foreach ($photoFields as $field => $path) {
-                    if ($request->hasFile($field)) {
-                        // Delete old photo if exists
-                        if ($user->$field && file_exists($path . '/' . $user->$field)) {
-                            unlink($path . '/' . $user->$field);
-                        }
-                        $data[$field] = uploadImage($path, $request->file($field));
-                    }
-                }
-                
-                // Update options if provided
-                if ($request->has('option_ids') && is_array($request->option_ids)) {
-                    // Sync the options (removes old ones and adds new ones)
-                    $user->options()->sync($request->option_ids);
-                }
-            }
-            
-            // Update user data
+
             $user->update($data);
-            
-            // Reload the user with the options relationship
-            if ($userType == 'driver') {
-                $user->load('options');
-            }
-            
-            return $this->success_response(ucfirst($userType) . ' profile updated successfully', $user);
+
+            return $this->success_response('User profile updated successfully', $user);
+
         } catch (\Throwable $th) {
-            \Log::error('Profile update error: ' . $th->getMessage());
+            \Log::error('User Profile update error: ' . $th->getMessage());
             return $this->error_response('Failed to update profile', ['message' => $th->getMessage()]);
         }
     }
+
+    public function updateDriverProfile(Request $request)
+    {
+        try {
+            $driver = auth('driver-api')->user();
+
+            if (!$driver) {
+                return $this->error_response('Unauthenticated', [], 401);
+            }
+
+            $validationRules = [
+                'name' => 'nullable|string|max:255',
+                'email' => 'nullable|email|unique:drivers,email,' . $driver->id,
+                'phone' => 'nullable|string',
+                'sos_phone' => 'nullable|string',
+                'country_code' => 'nullable|string',
+                'photo' => 'nullable|image',
+
+                'photo_of_car' => 'nullable|image',
+                'model' => 'nullable|string|max:255',
+                'production_year' => 'nullable|string|max:4',
+                'color' => 'nullable|string|max:255',
+                'plate_number' => 'nullable|string|max:255',
+                'driving_license_front' => 'nullable|image',
+                'driving_license_back' => 'nullable|image',
+                'car_license_front' => 'nullable|image',
+                'car_license_back' => 'nullable|image',
+                'option_ids' => 'nullable|array',
+                'option_ids.*' => 'nullable|exists:options,id'
+            ];
+
+            $validator = Validator::make($request->all(), $validationRules);
+            if ($validator->fails()) {
+                return $this->error_response('Validation error', $validator->errors());
+            }
+
+            $data = $request->only([
+                'name', 'email', 'phone', 'sos_phone', 'country_code',
+                'model', 'production_year', 'color', 'plate_number'
+            ]);
+
+            // Handle photo uploads
+            $photoFields = [
+                'photo' => 'assets/admin/uploads',
+                'photo_of_car' => 'assets/admin/uploads',
+                'driving_license_front' => 'assets/admin/uploads',
+                'driving_license_back' => 'assets/admin/uploads',
+                'car_license_front' => 'assets/admin/uploads',
+                'car_license_back' => 'assets/admin/uploads'
+            ];
+
+            foreach ($photoFields as $field => $path) {
+                if ($request->hasFile($field)) {
+                    if ($driver->$field && file_exists($path . '/' . $driver->$field)) {
+                        unlink($path . '/' . $driver->$field);
+                    }
+                    $data[$field] = uploadImage($path, $request->file($field));
+                }
+            }
+
+            $driver->update($data);
+
+            if ($request->has('option_ids') && is_array($request->option_ids)) {
+                $driver->options()->sync($request->option_ids);
+            }
+
+            $driver->load('options');
+
+            return $this->success_response('Driver profile updated successfully', $driver);
+
+        } catch (\Throwable $th) {
+            \Log::error('Driver Profile update error: ' . $th->getMessage());
+            return $this->error_response('Failed to update profile', ['message' => $th->getMessage()]);
+        }
+    }
+
+
 
     public function notifications()
     {

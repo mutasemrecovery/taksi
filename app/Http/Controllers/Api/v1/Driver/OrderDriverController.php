@@ -80,7 +80,7 @@ class OrderDriverController extends Controller
         
         // Pagination
         $perPage = $request->per_page ?? 15;
-        $orders = $query->with(['user:id,name,phone,photo', 'service:id,name'])->paginate($perPage);
+        $orders = $query->with(['user:id,name,phone,photo', 'service'])->paginate($perPage);
         
         // Transform data to include status text and other helper methods
         $orders->getCollection()->transform(function ($order) {
@@ -115,7 +115,7 @@ class OrderDriverController extends Controller
         
         $orders = Order::where('driver_id', $driver->id)
             ->whereIn('status', [2, 3, 4]) // Only orders accepted by driver and in progress
-            ->with(['user:id,name,phone,photo,fcm_token', 'service:id,name'])
+            ->with(['user:id,name,phone,photo,fcm_token', 'service'])
             ->orderBy('created_at', 'desc')
             ->get();
         
@@ -164,7 +164,7 @@ class OrderDriverController extends Controller
         
         // Pagination
         $perPage = $request->per_page ?? 15;
-        $orders = $query->with(['user:id,name,phone,photo', 'service:id,name'])
+        $orders = $query->with(['user:id,name,phone,photo', 'service'])
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
         
@@ -223,7 +223,7 @@ class OrderDriverController extends Controller
         
         // Pagination
         $perPage = $request->per_page ?? 15;
-        $orders = $query->with(['user:id,name,phone,photo', 'service:id,name'])
+        $orders = $query->with(['user:id,name,phone,photo', 'service'])
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
         
@@ -262,7 +262,7 @@ class OrderDriverController extends Controller
             ->where('driver_id', $driver->id)
             ->with([
                 'user:id,name,phone,photo,fcm_token',
-                'service:id,name,description,photo'
+                'service'
             ])
             ->first();
         
