@@ -21,10 +21,7 @@ class DriverLocationService
         $this->firestore = $firestore;
     }
     
-    /**
-     * Find available drivers and send notifications sorted by distance
-     */
-    public function findAndNotifyNearestDrivers($userLat, $userLng, $orderId, $serviceId, $radius = 10)
+    public function findAndStoreOrderInFirebase($userLat, $userLng, $orderId, $serviceId, $radius = 10, $orderStatus = 'pending')
     {
         try {
             // Step 1: Get available drivers from MySQL filtered by service
@@ -57,20 +54,20 @@ class DriverLocationService
                 ];
             }
             
-            // Step 4: Send notifications to sorted drivers
-            $notificationResults = $this->sendNotificationsToDrivers($sortedDrivers, $orderId, $serviceId);
+            // Step 4: Write order data to Firebase instead of sending notifications
+            $firebaseResult = $this->writeOrderToFirebase($orderId, $sortedDrivers, $serviceId, $orderStatus);
             
             return [
-                'success' => true,
+                'success' => $firebaseResult['success'],
                 'drivers_found' => count($sortedDrivers),
-                'notifications_sent' => $notificationResults['sent'],
-                'notifications_failed' => $notificationResults['failed'],
                 'drivers' => $sortedDrivers,
-                'service_id' => $serviceId
+                'service_id' => $serviceId,
+                'firebase_write' => $firebaseResult['success'] ? 'success' : 'failed',
+                'message' => $firebaseResult['message'] ?? 'Order data processed'
             ];
             
         } catch (\Exception $e) {
-            \Log::error('Error in findAndNotifyNearestDrivers: ' . $e->getMessage());
+            \Log::error('Error in findAndStoreOrderInFirebase: ' . $e->getMessage());
             return [
                 'success' => false,
                 'message' => 'Error processing request: ' . $e->getMessage()
@@ -186,49 +183,75 @@ class DriverLocationService
     }
     
     /**
-     * Send notifications to drivers with service information
+     * Write order data to Firebase orders collection
      */
-    private function sendNotificationsToDrivers(array $drivers, $orderId, $serviceId)
+    private function writeOrderToFirebase($orderId, array $drivers, $serviceId, $orderStatus)
     {
-        $sent = 0;
-        $failed = 0;
-        
-        // Get service information for the notification
-        $service = Service::find($serviceId);
-        
-        foreach ($drivers as $driver) {
-            try {
-                $success = EnhancedFCMService::sendNewOrderToDriver(
-                    $driver['id'],
-                    $orderId,
-                    $driver['distance'],
-                    [
-                        'service_id' => $serviceId,
-                        'service_name' => $service ? $service->name_en : 'Unknown Service',
-                        'service_type' => $service ? $service->type : null
-                    ]
-                );
-                
-                if ($success) {
-                    $sent++;
-                    \Log::info("Notification sent to driver {$driver['id']} for service {$serviceId} at distance {$driver['distance']}km");
-                } else {
-                    $failed++;
-                    \Log::error("Failed to send notification to driver {$driver['id']} for service {$serviceId}");
-                }
-                
-            } catch (\Exception $e) {
-                $failed++;
-                \Log::error("Exception sending notification to driver {$driver['id']} for service {$serviceId}: " . $e->getMessage());
-            }
+        try {
+            // Extract only driver IDs from the sorted drivers array
+            $driverIDs = array_map(function($driver) {
+                return $driver['id'];
+            }, $drivers);
             
-            // Add small delay between notifications to avoid rate limiting
-            usleep(100000); // 100ms delay
+            // Prepare order data
+            $orderData = [
+                'driverIDs' => $driverIDs,
+                'status' => $orderStatus,
+                'service_id' => $serviceId,
+                'created_at' => new \DateTime(),
+                'updated_at' => new \DateTime(),
+                'total_available_drivers' => count($driverIDs)
+            ];
+            
+            // Write to Firebase orders collection
+            $ordersCollection = $this->firestore->database()->collection('orders');
+            $ordersCollection->document((string)$orderId)->set($orderData);
+            
+            \Log::info("Order {$orderId} written to Firebase with " . count($driverIDs) . " available drivers for service {$serviceId}");
+            
+            return [
+                'success' => true,
+                'message' => 'Order data successfully written to Firebase',
+                'drivers_count' => count($driverIDs)
+            ];
+            
+        } catch (\Exception $e) {
+            \Log::error("Error writing order {$orderId} to Firebase: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Failed to write order data to Firebase: ' . $e->getMessage()
+            ];
         }
-        
-        return [
-            'sent' => $sent,
-            'failed' => $failed
-        ];
+    }
+    
+    /**
+     * Update order status in Firebase (helper method) not use
+     */
+    public function updateOrderStatus($orderId, $newStatus)
+    {
+        try {
+            $orderDoc = $this->firestore->database()
+                ->collection('orders')
+                ->document((string)$orderId);
+            
+            $orderDoc->update([
+                'status' => $newStatus,
+                'updated_at' => new \DateTime()
+            ]);
+            
+            \Log::info("Order {$orderId} status updated to {$newStatus} in Firebase");
+            
+            return [
+                'success' => true,
+                'message' => 'Order status updated successfully'
+            ];
+            
+        } catch (\Exception $e) {
+            \Log::error("Error updating order {$orderId} status in Firebase: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Failed to update order status: ' . $e->getMessage()
+            ];
+        }
     }
 }

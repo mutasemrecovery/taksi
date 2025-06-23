@@ -23,7 +23,7 @@ class FCMController extends BaseController
             return false;
         }
 
-        $credentialsFilePath = base_path('json/taxiu-app-faf54eac2bf6.json');
+        $credentialsFilePath = base_path('json/taxiu-app-ca1b7cce84bc.json');
 
         try {
             $client = new GoogleClient();

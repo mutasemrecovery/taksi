@@ -58,7 +58,7 @@ class EnhancedFCMService extends AdminFCMController
         return false;
     }
     
-    $credentialsFilePath = base_path('json/taxiu-app-faf54eac2bf6.json');
+    $credentialsFilePath = base_path('json/taxiu-app-ca1b7cce84bc.json');
     
     // Debug: Check if file exists and is readable
     if (!file_exists($credentialsFilePath)) {

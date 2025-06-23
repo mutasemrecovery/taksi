@@ -155,7 +155,8 @@ class OrderController extends Controller
             $request->start_lng,
             $order->id,
             $request->service_id, // Pass service_id
-            $request->radius ?? 10000 // Default 10km radius
+            $request->radius ?? 10000, // Default 10km radius,
+            'pending' // Status of order
         );
         
         if ($result['success']) {
